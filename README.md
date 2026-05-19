@@ -13,7 +13,7 @@ Eye break reminders for your desktop: a menu bar / system tray timer, a fullscre
 - Pauses the work timer while idle
 - Optional eye exercises, strict mode (no skip button), 30-second demo
 - **English** and **Russian** UI (Settings → Language)
-- Postpone break (+5 / +10 min), optional pre-break notification, end-of-break chime
+- Postpone break (+5 / +10 min), optional pre-break notification, end-of-break meow
 - Launch at login (macOS / Windows)
 
 ## Platform support

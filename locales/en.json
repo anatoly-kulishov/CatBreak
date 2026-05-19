@@ -30,7 +30,7 @@
     "showExercises": "Show eye exercises",
     "strictBreak": "Strict break (no End button)",
     "notifyBeforeBreak": "Notify 1 minute before break",
-    "soundOnBreakEnd": "Play sound when break ends",
+    "soundOnBreakEnd": "Meow when break ends",
     "launchAtLogin": "Launch at login",
     "launchAtLoginNote": "macOS and Windows only",
     "language": "Language",
