@@ -1,0 +1,4 @@
+meow.mp3 — first meow from user-provided preview.mp3 (Mixkit cat SFX preview).
+  Trimmed to ~1 s for break-end sound.
+
+neko1.webm / neko2.webm — cat animation (project assets; video audio track is silent).

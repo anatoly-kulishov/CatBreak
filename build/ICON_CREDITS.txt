@@ -1,5 +1,6 @@
-App icon: illustrated orange tabby (AI-generated), square 1024 with safe padding for macOS squircle.
+icon-source.png — illustrated orange tabby (AI-generated), 1024×1024.
 
-Regenerate icns after replacing build/icon.png:
-  iconutil -c icns build/icon.iconset -o build/icon.icns
-Then: npm run dist
+Regenerate masked icons:
+  npm run prepare
+
+Outputs: icon.png (squircle alpha), icon.iconset/, icon.icns, icon.ico.

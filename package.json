@@ -35,7 +35,8 @@
   "devDependencies": {
     "electron": "^35.0.0",
     "electron-builder": "^25.1.8",
-    "png-to-ico": "^2.1.8"
+    "png-to-ico": "^2.1.8",
+    "sharp": "^0.34.5"
   },
   "build": {
     "appId": "com.catbreak.desktop",
@@ -54,7 +55,10 @@
     "mac": {
       "category": "public.app-category.healthcare-fitness",
       "icon": "build/icon.icns",
-      "target": ["dmg", "zip"]
+      "target": [
+        "dmg",
+        "zip"
+      ]
     },
     "win": {
       "icon": "build/icon.ico",
@@ -62,23 +66,34 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64", "arm64"]
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         },
         {
           "target": "portable",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ]
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "installerLanguages": ["ru", "en"]
+      "installerLanguages": [
+        "ru",
+        "en"
+      ]
     },
     "linux": {
       "icon": "build/icon.png",
       "category": "Utility",
-      "target": ["AppImage", "deb"],
+      "target": [
+        "AppImage",
+        "deb"
+      ],
       "desktop": {
         "Name": "Cat Break",
         "Comment": "Break reminders for your eyes",
