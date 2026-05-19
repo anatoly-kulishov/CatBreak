@@ -6,7 +6,7 @@
 
 - Postpone break (+5 / +10 min) from the tray menu
 - Optional notification 1 minute before a break
-- Optional chime when a break ends
+- Optional meow when a break ends (real cat SFX from Mixkit, Web Audio fallback)
 - Launch at login (macOS and Windows)
 - App version and Releases link in Settings
 - English and Russian strings for new options
