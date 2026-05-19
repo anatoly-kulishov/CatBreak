@@ -32,7 +32,8 @@ label.row {
   font-size: 13px;
 }
 
-input[type="number"] {
+input[type="number"],
+select {
   display: block;
   width: 100%;
   margin-top: 6px;
@@ -43,6 +44,10 @@ input[type="number"] {
   color: #fff;
   font-size: 14px;
   box-sizing: border-box;
+}
+
+select {
+  cursor: pointer;
 }
 
 .actions {

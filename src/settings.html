@@ -7,7 +7,7 @@
       http-equiv="Content-Security-Policy"
       content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'"
     />
-    <title>Настройки</title>
+    <title>Settings</title>
     <link rel="stylesheet" href="settings.css" />
     <style>
       html,
@@ -21,35 +21,44 @@
   </head>
   <body>
     <h1>Cat Break</h1>
-    <p class="sub">Перерывы для глаз. Запись экрана не используется.</p>
+    <p class="sub" data-i18n="settings.sub"></p>
 
     <label>
-      Минут работы до перерыва
+      <span data-i18n="settings.language"></span>
+      <select id="locale">
+        <option value="auto" data-i18n="settings.localeAuto"></option>
+        <option value="ru" data-i18n="settings.localeRu"></option>
+        <option value="en" data-i18n="settings.localeEn"></option>
+      </select>
+    </label>
+
+    <label>
+      <span data-i18n="settings.workMinutes"></span>
       <input id="workMinutes" type="number" min="1" max="480" />
     </label>
 
     <label>
-      Минут перерыва
+      <span data-i18n="settings.breakMinutes"></span>
       <input id="breakMinutes" type="number" min="1" max="60" />
     </label>
 
     <label>
-      Не считать работу при простое (мин)
+      <span data-i18n="settings.idlePauseMinutes"></span>
       <input id="idlePauseMinutes" type="number" min="1" max="30" />
     </label>
 
     <label class="row">
       <input id="showExercises" type="checkbox" />
-      Показывать упражнения для глаз
+      <span data-i18n="settings.showExercises"></span>
     </label>
 
     <label class="row">
       <input id="strictBreak" type="checkbox" />
-      Строгий перерыв (без кнопки «Завершить»)
+      <span data-i18n="settings.strictBreak"></span>
     </label>
 
     <div class="actions">
-      <button id="save" type="button">Сохранить</button>
+      <button id="save" type="button" data-i18n="settings.save"></button>
     </div>
 
     <p id="status" class="status"></p>

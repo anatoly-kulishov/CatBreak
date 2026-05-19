@@ -1,0 +1,50 @@
+{
+  "app": {
+    "name": "Cat Break",
+    "settingsTitle": "Cat Break — Settings"
+  },
+  "tray": {
+    "tooltip": "Cat Break",
+    "breakStatus": "Break: {{clock}}",
+    "workStatus": "Break in: {{clock}}",
+    "breakPrefix": "Break",
+    "workPrefix": "Break in",
+    "startNow": "Start break now",
+    "demo": "Demo (30 sec)",
+    "endBreak": "End break (all screens)",
+    "settings": "Settings…",
+    "resetWork": "Reset work timer",
+    "quit": "Quit"
+  },
+  "settings": {
+    "sub": "Eye break reminders. Screen recording is not used.",
+    "workMinutes": "Work minutes before break",
+    "breakMinutes": "Break length (minutes)",
+    "idlePauseMinutes": "Pause timer when idle (min)",
+    "showExercises": "Show eye exercises",
+    "strictBreak": "Strict break (no End button)",
+    "language": "Language",
+    "localeAuto": "System default",
+    "localeRu": "Русский",
+    "localeEn": "English",
+    "save": "Save",
+    "saved": "Saved",
+    "bootError": "Failed to load UI. Please restart the app.",
+    "loadError": "Could not load settings.",
+    "saveError": "Could not save settings."
+  },
+  "break": {
+    "title": "Break",
+    "eyebrow": "Time for your eyes and back",
+    "hintDemo": "Demo. Closes all screens at once.",
+    "hintSkip": "Ends the break on all screens.",
+    "hintDemoStrict": "Demo break",
+    "hintStrict": "Step away from the screen.",
+    "exercisesTitle": "Exercises",
+    "exercise1": "Look into the distance for 20 seconds.",
+    "exercise2": "Blink slowly 10 times.",
+    "exercise3": "Roll your eyes in circles.",
+    "exercise4": "Stand up and stretch your neck.",
+    "skip": "Off you go, cat!"
+  }
+}

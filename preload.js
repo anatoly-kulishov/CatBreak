@@ -13,4 +13,7 @@ contextBridge.exposeInMainWorld("catBreak", {
   onBreakExitRequest: (cb) => {
     ipcRenderer.on("break-exit-request", (_e, payload) => cb(payload));
   },
+  onSettingsUpdated: (cb) => {
+    ipcRenderer.on("settings-updated", (_e, payload) => cb(payload));
+  },
 });
