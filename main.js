@@ -18,6 +18,7 @@ const {
   setAppUserModelId,
   getBreakWindowOptions,
 } = require("./lib/platform");
+const { createTranslator, clearLocaleCache } = require("./lib/i18n");
 
 const SETTINGS_PATH = path.join(app.getPath("userData"), "settings.json");
 
@@ -27,6 +28,7 @@ const DEFAULT_SETTINGS = {
   idlePauseMinutes: 2,
   showExercises: true,
   strictBreak: false,
+  locale: "auto",
 };
 
 let tray = null;
@@ -45,6 +47,10 @@ let tickTimer = null;
 
 if (!app.requestSingleInstanceLock()) {
   app.quit();
+}
+
+function getTranslator() {
+  return createTranslator(settings.locale);
 }
 
 function loadSettings() {
@@ -70,51 +76,56 @@ function formatClock(totalSeconds) {
 
 function updateTrayTitle() {
   if (!tray) return;
+  const tr = getTranslator();
   updateTrayStatus(tray, {
     onBreak,
     clockText: formatClock(onBreak ? breakSecondsLeft : workSecondsLeft),
+    tr,
   });
 }
 
 function buildTrayMenu() {
+  const tr = getTranslator();
+  const clock = formatClock(onBreak ? breakSecondsLeft : workSecondsLeft);
+
   return Menu.buildFromTemplate([
     {
       label: onBreak
-        ? `Перерыв: ${formatClock(breakSecondsLeft)}`
-        : `До перерыва: ${formatClock(workSecondsLeft)}`,
+        ? tr.t("tray.breakStatus", { clock })
+        : tr.t("tray.workStatus", { clock }),
       enabled: false,
     },
     { type: "separator" },
     {
-      label: "Начать перерыв сейчас",
+      label: tr.t("tray.startNow"),
       click: () => startBreak({ demo: false }),
     },
     {
-      label: "Демо (30 сек)",
+      label: tr.t("tray.demo"),
       click: () => startBreak({ demo: true, seconds: 30 }),
     },
     ...(onBreak
       ? [
           {
-            label: "Завершить перерыв (все экраны)",
+            label: tr.t("tray.endBreak"),
             click: () => requestBreakExit({ fast: true }),
           },
           { type: "separator" },
         ]
       : []),
     {
-      label: "Настройки…",
+      label: tr.t("tray.settings"),
       click: openSettings,
     },
     {
-      label: "Сбросить таймер работы",
+      label: tr.t("tray.resetWork"),
       click: () => {
         if (!onBreak) resetWorkTimer();
       },
     },
     { type: "separator" },
     {
-      label: "Выход",
+      label: tr.t("tray.quit"),
       click: () => app.quit(),
     },
   ]);
@@ -181,6 +192,7 @@ function tick() {
 
 async function createBreakWindows(payload) {
   const displays = screen.getAllDisplays();
+  const tr = getTranslator();
 
   for (const display of displays) {
     const win = new BrowserWindow(
@@ -199,6 +211,7 @@ async function createBreakWindows(payload) {
       ...payload,
       strictBreak: settings.strictBreak,
       showExercises: settings.showExercises,
+      strings: tr.messages.break,
     };
 
     await win.loadFile(path.join(__dirname, "src", "break.html"));
@@ -280,13 +293,15 @@ function openSettings() {
     return;
   }
 
+  const tr = getTranslator();
+
   settingsWindow = new BrowserWindow({
     width: 400,
-    height: 480,
+    height: 520,
     resizable: false,
     show: false,
     backgroundColor: "#1a1a1a",
-    title: "Cat Break — настройки",
+    title: tr.t("app.settingsTitle"),
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
@@ -308,6 +323,18 @@ function openSettings() {
   });
 }
 
+function notifySettingsUi() {
+  if (settingsWindow && !settingsWindow.isDestroyed()) {
+    const tr = getTranslator();
+    settingsWindow.setTitle(tr.t("app.settingsTitle"));
+    settingsWindow.webContents.send("settings-updated", {
+      settings,
+      locale: tr.locale,
+      strings: tr.messages,
+    });
+  }
+}
+
 function createTray() {
   const iconPath = getTrayIconPath();
   let icon;
@@ -320,7 +347,6 @@ function createTray() {
   }
 
   tray = new Tray(icon);
-  tray.setToolTip("Cat Break");
   refreshTray();
 }
 
@@ -345,13 +371,27 @@ app.on("before-quit", () => {
   closeBreakWindows();
 });
 
-ipcMain.handle("get-settings", () => ({ settings, workSecondsLeft, onBreak }));
+ipcMain.handle("get-settings", () => {
+  const tr = getTranslator();
+  return {
+    settings,
+    workSecondsLeft,
+    onBreak,
+    locale: tr.locale,
+    strings: tr.messages,
+  };
+});
 
 ipcMain.handle("save-settings", (_e, next) => {
+  const prevLocale = settings.locale;
   settings = { ...DEFAULT_SETTINGS, ...next };
   saveSettings();
+  if (prevLocale !== settings.locale) {
+    clearLocaleCache();
+  }
   if (!onBreak) resetWorkTimer();
   refreshTray();
+  notifySettingsUi();
   return true;
 });
 
