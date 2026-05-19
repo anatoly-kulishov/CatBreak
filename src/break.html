@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; media-src 'self'; style-src 'self' 'unsafe-inline'"
+    />
+    <title>Перерыв</title>
+    <link rel="stylesheet" href="break.css" />
+  </head>
+  <body>
+    <div id="bg" class="bg" aria-hidden="true"></div>
+    <div class="shade" aria-hidden="true"></div>
+
+    <div id="cat-stage" class="cat-stage">
+      <div id="countdown" class="countdown">0:00</div>
+      <video
+        id="neko1"
+        class="cat-video"
+        src="../assets/neko1.webm"
+        autoplay
+        muted
+        playsinline
+      ></video>
+      <video
+        id="neko2"
+        class="cat-video cat-sleep"
+        src="../assets/neko2.webm"
+        muted
+        playsinline
+        loop
+        hidden
+      ></video>
+    </div>
+
+    <aside id="side" class="side">
+      <p id="hint" class="hint"></p>
+      <section id="exercises" class="exercises" hidden>
+        <h2>Упражнения</h2>
+        <ul>
+          <li>20 секунд смотрите вдаль, не в экран.</li>
+          <li>Медленно моргните 10 раз.</li>
+          <li>Круговые движения глазами.</li>
+          <li>Встаньте, разомните шею.</li>
+        </ul>
+      </section>
+      <button id="skip" type="button" class="skip" hidden>Пошёл отсюда, кот!</button>
+    </aside>
+
+    <script src="break.js"></script>
+  </body>
+</html>

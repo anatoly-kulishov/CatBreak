@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="color-scheme" content="dark" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'"
+    />
+    <title>Настройки</title>
+    <link rel="stylesheet" href="settings.css" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background: #1a1a1a;
+        color: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Cat Break</h1>
+    <p class="sub">Перерывы для глаз. Запись экрана не используется.</p>
+
+    <label>
+      Минут работы до перерыва
+      <input id="workMinutes" type="number" min="1" max="480" />
+    </label>
+
+    <label>
+      Минут перерыва
+      <input id="breakMinutes" type="number" min="1" max="60" />
+    </label>
+
+    <label>
+      Не считать работу при простое (мин)
+      <input id="idlePauseMinutes" type="number" min="1" max="30" />
+    </label>
+
+    <label class="row">
+      <input id="showExercises" type="checkbox" />
+      Показывать упражнения для глаз
+    </label>
+
+    <label class="row">
+      <input id="strictBreak" type="checkbox" />
+      Строгий перерыв (без кнопки «Завершить»)
+    </label>
+
+    <div class="actions">
+      <button id="save" type="button">Сохранить</button>
+    </div>
+
+    <p id="status" class="status"></p>
+
+    <script src="settings.js"></script>
+  </body>
+</html>
