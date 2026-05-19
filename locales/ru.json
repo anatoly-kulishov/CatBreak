@@ -30,7 +30,7 @@
     "showExercises": "Показывать упражнения для глаз",
     "strictBreak": "Строгий перерыв (без кнопки «Завершить»)",
     "notifyBeforeBreak": "Уведомление за 1 минуту до перерыва",
-    "soundOnBreakEnd": "Звук в конце перерыва",
+    "soundOnBreakEnd": "Мяуканье в конце перерыва",
     "launchAtLogin": "Запускать при входе в систему",
     "launchAtLoginNote": "только macOS и Windows",
     "language": "Язык",

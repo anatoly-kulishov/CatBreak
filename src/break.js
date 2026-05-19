@@ -69,24 +69,50 @@ function applyBreakUi(payload) {
   applyHints();
 }
 
-function playEndChime() {
+const meowAudioEl = document.getElementById("meow-sound");
+
+function playEndMeowSynth() {
   try {
     const ctx = new AudioContext();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(520, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.12);
-    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.35);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.4);
-    osc.onended = () => ctx.close();
+    const master = ctx.createGain();
+    master.gain.value = 0.4;
+    master.connect(ctx.destination);
+
+    function tone(start, duration, f0, f1, peak = 0.7) {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(f0, start);
+      osc.frequency.exponentialRampToValueAtTime(Math.max(f1, 80), start + duration);
+      g.gain.setValueAtTime(0.001, start);
+      g.gain.linearRampToValueAtTime(peak, start + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, start + duration);
+      osc.connect(g);
+      g.connect(master);
+      osc.start(start);
+      osc.stop(start + duration + 0.02);
+    }
+
+    const t0 = ctx.currentTime;
+    tone(t0, 0.1, 620, 480, 0.55);
+    tone(t0 + 0.08, 0.42, 420, 240, 0.85);
+    window.setTimeout(() => ctx.close().catch(() => {}), 700);
   } catch {
     // ignore if audio is unavailable
+  }
+}
+
+function playEndMeow() {
+  if (!meowAudioEl) {
+    playEndMeowSynth();
+    return;
+  }
+
+  meowAudioEl.volume = 0.65;
+  meowAudioEl.currentTime = 0;
+  const playPromise = meowAudioEl.play();
+  if (playPromise?.catch) {
+    playPromise.catch(() => playEndMeowSynth());
   }
 }
 
@@ -101,7 +127,7 @@ function beginCatExit(fast = false, playSound = false) {
   isExiting = true;
 
   if (playSound) {
-    playEndChime();
+    playEndMeow();
   }
 
   countdownEl.style.opacity = "0";
