@@ -43,6 +43,7 @@
       "main.js",
       "preload.js",
       "lib/**/*",
+      "locales/**/*",
       "src/**/*",
       "assets/**/*",
       "build/icon.icns",

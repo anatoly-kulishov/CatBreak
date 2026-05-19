@@ -6,7 +6,7 @@
       http-equiv="Content-Security-Policy"
       content="default-src 'self'; media-src 'self'; style-src 'self' 'unsafe-inline'"
     />
-    <title>Перерыв</title>
+    <title>Break</title>
     <link rel="stylesheet" href="break.css" />
   </head>
   <body>
@@ -37,15 +37,15 @@
     <aside id="side" class="side">
       <p id="hint" class="hint"></p>
       <section id="exercises" class="exercises" hidden>
-        <h2>Упражнения</h2>
+        <h2 id="exercises-title"></h2>
         <ul>
-          <li>20 секунд смотрите вдаль, не в экран.</li>
-          <li>Медленно моргните 10 раз.</li>
-          <li>Круговые движения глазами.</li>
-          <li>Встаньте, разомните шею.</li>
+          <li id="exercise-1"></li>
+          <li id="exercise-2"></li>
+          <li id="exercise-3"></li>
+          <li id="exercise-4"></li>
         </ul>
       </section>
-      <button id="skip" type="button" class="skip" hidden>Пошёл отсюда, кот!</button>
+      <button id="skip" type="button" class="skip" hidden></button>
     </aside>
 
     <script src="break.js"></script>
