@@ -13,14 +13,16 @@ Eye break reminders for your desktop: a menu bar / system tray timer, a fullscre
 - Pauses the work timer while idle
 - Optional eye exercises, strict mode (no skip button), 30-second demo
 - **English** and **Russian** UI (Settings → Language)
+- Postpone break (+5 / +10 min), optional pre-break notification, end-of-break chime
+- Launch at login (macOS / Windows)
 
 ## Platform support
 
 | Platform | Status | Build | Docs |
 |----------|--------|-------|------|
-| **macOS** 12+ (Apple Silicon / Intel) | Primary | `npm run dist:mac` | [MACOS_INSTALL.md](docs/MACOS_INSTALL.md) |
-| **Windows** 10/11 x64, arm64 | Supported | `npm run dist:win` | [WINDOWS_INSTALL.md](docs/WINDOWS_INSTALL.md) |
-| **Linux** x64 (AppImage, deb) | Supported* | `npm run dist:linux` | [LINUX_INSTALL.md](docs/LINUX_INSTALL.md) |
+| **macOS** 12+ (Apple Silicon / Intel) | Primary | `npm run dist:mac` | [en/MACOS_INSTALL.md](docs/en/MACOS_INSTALL.md) |
+| **Windows** 10/11 x64, arm64 | Supported | `npm run dist:win` | [en/WINDOWS_INSTALL.md](docs/en/WINDOWS_INSTALL.md) |
+| **Linux** x64 (AppImage, deb) | Supported* | `npm run dist:linux` | [en/LINUX_INSTALL.md](docs/en/LINUX_INSTALL.md) |
 
 \* On **Wayland**, the always-on-top overlay may be limited; **X11** works more reliably.
 
@@ -92,7 +94,7 @@ Attach platform artifacts to each release:
 - Windows: `*Setup*.exe`, portable `*.exe`
 - Linux: `*.AppImage`, `*.deb`
 
-Unsigned builds: users may need **Right-click → Open** (macOS) or SmartScreen confirmation (Windows). See `docs/`.
+Unsigned builds: users may need **Right-click → Open** (macOS) or SmartScreen confirmation (Windows). See [docs/en/](docs/en/) or [docs/ru/](docs/ru/).
 
 ## License
 

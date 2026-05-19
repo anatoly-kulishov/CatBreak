@@ -10,6 +10,7 @@ const {
 } = require("electron");
 const path = require("path");
 const fs = require("fs");
+const pkg = require("./package.json");
 const {
   configureBreakWindow,
   updateTrayStatus,
@@ -19,8 +20,13 @@ const {
   getBreakWindowOptions,
 } = require("./lib/platform");
 const { createTranslator, clearLocaleCache } = require("./lib/i18n");
+const { applyLaunchAtLogin, canUseLoginItemSettings } = require("./lib/autostart");
+const { showNotification } = require("./lib/notifications");
 
 const SETTINGS_PATH = path.join(app.getPath("userData"), "settings.json");
+const RELEASES_URL = pkg.repository?.url
+  ? pkg.repository.url.replace(/\.git$/, "") + "/releases"
+  : "https://github.com/anatoly-kulishov/CatBreak/releases";
 
 const DEFAULT_SETTINGS = {
   workMinutes: 55,
@@ -29,6 +35,9 @@ const DEFAULT_SETTINGS = {
   showExercises: true,
   strictBreak: false,
   locale: "auto",
+  notifyBeforeBreak: true,
+  soundOnBreakEnd: true,
+  launchAtLogin: false,
 };
 
 let tray = null;
@@ -39,8 +48,10 @@ let settings = { ...DEFAULT_SETTINGS };
 let workSecondsLeft = 0;
 let breakSecondsLeft = 0;
 let onBreak = false;
+let breakIsDemo = false;
 let breakExitRequested = false;
 let breakExitTimer = null;
+let preBreakNotified = false;
 const BREAK_EXIT_ANIM_MS = 1100;
 const BREAK_EXIT_FAST_MS = 280;
 let tickTimer = null;
@@ -84,6 +95,26 @@ function updateTrayTitle() {
   });
 }
 
+function postponeBreak(minutes) {
+  if (onBreak) return;
+  workSecondsLeft += minutes * 60;
+  preBreakNotified = false;
+  refreshTray();
+}
+
+function maybeNotifyBeforeBreak() {
+  if (!settings.notifyBeforeBreak || onBreak) return;
+  if (workSecondsLeft !== 60 || preBreakNotified) return;
+
+  const tr = getTranslator();
+  showNotification({
+    title: tr.t("notify.title"),
+    body: tr.t("notify.body"),
+    silent: false,
+  });
+  preBreakNotified = true;
+}
+
 function buildTrayMenu() {
   const tr = getTranslator();
   const clock = formatClock(onBreak ? breakSecondsLeft : workSecondsLeft);
@@ -104,6 +135,18 @@ function buildTrayMenu() {
       label: tr.t("tray.demo"),
       click: () => startBreak({ demo: true, seconds: 30 }),
     },
+    ...(!onBreak
+      ? [
+          {
+            label: tr.t("tray.postpone5"),
+            click: () => postponeBreak(5),
+          },
+          {
+            label: tr.t("tray.postpone10"),
+            click: () => postponeBreak(10),
+          },
+        ]
+      : []),
     ...(onBreak
       ? [
           {
@@ -139,6 +182,7 @@ function refreshTray() {
 
 function resetWorkTimer() {
   workSecondsLeft = settings.workMinutes * 60;
+  preBreakNotified = false;
   refreshTray();
 }
 
@@ -178,6 +222,12 @@ function tick() {
     return;
   }
 
+  if (workSecondsLeft > 90) {
+    preBreakNotified = false;
+  }
+
+  maybeNotifyBeforeBreak();
+
   if (workSecondsLeft <= 0) {
     startBreak({ demo: false });
     return;
@@ -190,9 +240,20 @@ function tick() {
   refreshTray();
 }
 
+function buildBreakPayload(extra = {}) {
+  const tr = getTranslator();
+  return {
+    strictBreak: settings.strictBreak,
+    showExercises: settings.showExercises,
+    strings: tr.messages.break,
+    locale: tr.locale,
+    demo: breakIsDemo,
+    ...extra,
+  };
+}
+
 async function createBreakWindows(payload) {
   const displays = screen.getAllDisplays();
-  const tr = getTranslator();
 
   for (const display of displays) {
     const win = new BrowserWindow(
@@ -209,15 +270,23 @@ async function createBreakWindows(payload) {
 
     const breakPayload = {
       ...payload,
-      strictBreak: settings.strictBreak,
-      showExercises: settings.showExercises,
-      strings: tr.messages.break,
+      ...buildBreakPayload(),
     };
 
     await win.loadFile(path.join(__dirname, "src", "break.html"));
     win.webContents.send("break-init", breakPayload);
 
     breakWindows.set(display.id, win);
+  }
+}
+
+function broadcastBreakLocaleUpdate() {
+  if (!onBreak) return;
+  const payload = buildBreakPayload();
+  for (const win of breakWindows.values()) {
+    if (!win.isDestroyed()) {
+      win.webContents.send("break-locale-update", payload);
+    }
   }
 }
 
@@ -244,10 +313,11 @@ function requestBreakExit({ fast = false } = {}) {
   breakExitRequested = true;
 
   const delayMs = fast ? BREAK_EXIT_FAST_MS : BREAK_EXIT_ANIM_MS;
+  const playSound = settings.soundOnBreakEnd && !fast;
 
   for (const win of breakWindows.values()) {
     if (!win.isDestroyed()) {
-      win.webContents.send("break-exit-request", { fast });
+      win.webContents.send("break-exit-request", { fast, playSound });
     }
   }
 
@@ -264,7 +334,9 @@ async function startBreak({ demo = false, seconds = null } = {}) {
   }
 
   onBreak = true;
+  breakIsDemo = demo;
   breakExitRequested = false;
+  preBreakNotified = false;
   breakSecondsLeft =
     demo && seconds != null ? seconds : settings.breakMinutes * 60;
 
@@ -281,6 +353,7 @@ function endBreak() {
   clearTimeout(breakExitTimer);
   breakExitTimer = null;
   onBreak = false;
+  breakIsDemo = false;
   breakExitRequested = false;
   closeBreakWindows();
   resetWorkTimer();
@@ -297,7 +370,7 @@ function openSettings() {
 
   settingsWindow = new BrowserWindow({
     width: 400,
-    height: 520,
+    height: 580,
     resizable: false,
     show: false,
     backgroundColor: "#1a1a1a",
@@ -331,6 +404,9 @@ function notifySettingsUi() {
       settings,
       locale: tr.locale,
       strings: tr.messages,
+      appVersion: pkg.version,
+      releasesUrl: RELEASES_URL,
+      launchAtLoginSupported: canUseLoginItemSettings(),
     });
   }
 }
@@ -347,6 +423,11 @@ function createTray() {
   }
 
   tray = new Tray(icon);
+
+  if (process.platform === "darwin") {
+    tray.on("double-click", () => openSettings());
+  }
+
   refreshTray();
 }
 
@@ -357,6 +438,7 @@ app.on("second-instance", () => {
 app.whenReady().then(() => {
   setAppUserModelId();
   loadSettings();
+  applyLaunchAtLogin(settings.launchAtLogin);
   createTray();
   startTick();
   hideDockIfNeeded();
@@ -379,6 +461,9 @@ ipcMain.handle("get-settings", () => {
     onBreak,
     locale: tr.locale,
     strings: tr.messages,
+    appVersion: pkg.version,
+    releasesUrl: RELEASES_URL,
+    launchAtLoginSupported: canUseLoginItemSettings(),
   };
 });
 
@@ -386,9 +471,13 @@ ipcMain.handle("save-settings", (_e, next) => {
   const prevLocale = settings.locale;
   settings = { ...DEFAULT_SETTINGS, ...next };
   saveSettings();
+  applyLaunchAtLogin(settings.launchAtLogin);
+
   if (prevLocale !== settings.locale) {
     clearLocaleCache();
+    broadcastBreakLocaleUpdate();
   }
+
   if (!onBreak) resetWorkTimer();
   refreshTray();
   notifySettingsUi();

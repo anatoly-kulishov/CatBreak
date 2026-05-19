@@ -77,3 +77,28 @@ button.secondary {
   font-size: 12px;
   color: #8bc48a;
 }
+
+.note {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  color: #777;
+  font-weight: normal;
+}
+
+.meta {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #333;
+  font-size: 11px;
+  color: #888;
+}
+
+.meta a {
+  color: #ff6b35;
+  text-decoration: none;
+}
+
+.meta a:hover {
+  text-decoration: underline;
+}

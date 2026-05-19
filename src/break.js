@@ -11,6 +11,7 @@ const sideEl = document.getElementById("side");
 let secondsLeft = 0;
 let isExiting = false;
 let strings = {};
+let breakState = { demo: false, strictBreak: false, showExercises: true };
 
 function formatClock(totalSeconds) {
   const m = Math.floor(totalSeconds / 60);
@@ -38,15 +39,70 @@ function applyBreakStrings(s) {
   }
 }
 
+function applyHints() {
+  if (!breakState.strictBreak) {
+    skipBtn.hidden = false;
+    hintEl.textContent = breakState.demo
+      ? strings.hintDemo || ""
+      : strings.hintSkip || "";
+  } else {
+    skipBtn.hidden = true;
+    hintEl.textContent = breakState.demo
+      ? strings.hintDemoStrict || ""
+      : strings.hintStrict || "";
+  }
+}
+
+function applyBreakUi(payload) {
+  if (payload.locale) {
+    document.documentElement.lang = payload.locale;
+  }
+
+  breakState = {
+    demo: !!payload.demo,
+    strictBreak: !!payload.strictBreak,
+    showExercises: !!payload.showExercises,
+  };
+
+  applyBreakStrings(payload.strings);
+  exercisesEl.hidden = !breakState.showExercises;
+  applyHints();
+}
+
+function playEndChime() {
+  try {
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(520, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.12);
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.35);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.4);
+    osc.onended = () => ctx.close();
+  } catch {
+    // ignore if audio is unavailable
+  }
+}
+
 function getVisibleCatVideo() {
   if (!neko2.hidden && neko2.classList.contains("visible")) return neko2;
   if (!neko1.hidden) return neko1;
   return null;
 }
 
-function beginCatExit(fast = false) {
+function beginCatExit(fast = false, playSound = false) {
   if (isExiting) return;
   isExiting = true;
+
+  if (playSound) {
+    playEndChime();
+  }
 
   countdownEl.style.opacity = "0";
   sideEl.style.transition = fast ? "opacity 0.15s ease" : "opacity 0.25s ease";
@@ -78,7 +134,7 @@ neko1.addEventListener("ended", () => {
 window.catBreak.onBreakInit((payload) => {
   secondsLeft = payload.totalSeconds;
   isExiting = false;
-  applyBreakStrings(payload.strings);
+  applyBreakUi(payload);
   renderTimer();
 
   document.body.classList.remove("is-fading-out");
@@ -93,26 +149,10 @@ window.catBreak.onBreakInit((payload) => {
 
   countdownEl.style.opacity = "1";
   sideEl.style.opacity = "1";
+});
 
-  if (payload.showExercises) {
-    exercisesEl.hidden = false;
-  } else {
-    exercisesEl.hidden = true;
-  }
-
-  if (!payload.strictBreak) {
-    skipBtn.hidden = false;
-    if (payload.demo) {
-      hintEl.textContent = strings.hintDemo || "";
-    } else {
-      hintEl.textContent = strings.hintSkip || "";
-    }
-  } else {
-    skipBtn.hidden = true;
-    hintEl.textContent = payload.demo
-      ? strings.hintDemoStrict || ""
-      : strings.hintStrict || "";
-  }
+window.catBreak.onBreakLocaleUpdate((payload) => {
+  applyBreakUi(payload);
 });
 
 window.catBreak.onBreakTick(({ secondsLeft: next }) => {
@@ -121,7 +161,7 @@ window.catBreak.onBreakTick(({ secondsLeft: next }) => {
 });
 
 window.catBreak.onBreakExitRequest((payload) => {
-  beginCatExit(!!payload?.fast);
+  beginCatExit(!!payload?.fast, !!payload?.playSound);
 });
 
 skipBtn.addEventListener("click", () => {
