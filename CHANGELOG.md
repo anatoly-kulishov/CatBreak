@@ -13,6 +13,7 @@
 
 ### Fixed
 
+- Windows build: disable `signAndEditExecutable` to avoid winCodeSign symlink errors on unsigned builds
 - Document `lang` on settings/break pages follows selected locale
 - Break overlay text updates when language is changed in Settings during a break
 

@@ -40,6 +40,27 @@ npm run dist:win
 
 Артефакты: `dist/Cat Break Setup *.exe`, portable `.exe`.
 
+### Ошибка сборки: «Cannot create symbolic link» (winCodeSign)
+
+Если `electron-builder` падает при распаковке `winCodeSign` с **Cannot create symbolic link**, Windows не дал создать симлинк (сертификата подписи у нас всё равно нет).
+
+**Решение (одно из):**
+
+1. **Рекомендуется:** обновите репозиторий — в `package.json` для Windows стоит `signAndEditExecutable: false`, без `winCodeSign`.
+2. **Параметры → Конфиденциальность → Для разработчиков** → включите **Режим разработчика**, удалите кэш и соберите снова:
+   ```bat
+   rmdir /s /q "%LOCALAPPDATA%\electron-builder\Cache\winCodeSign"
+   npm run dist:win
+   ```
+3. Запустите **cmd от имени администратора** и снова `npm run dist:win`.
+
+Переменная окружения (без подписи):
+
+```bat
+set CSC_IDENTITY_AUTO_DISCOVERY=false
+npm run dist:win
+```
+
 ## Ограничения
 
 - Оверлей зависит от Windows и полноэкранных приложений.
