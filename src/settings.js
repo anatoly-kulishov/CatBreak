@@ -3,21 +3,27 @@ const fields = [
   "workMinutes",
   "breakMinutes",
   "idlePauseMinutes",
+  "notifyBeforeBreak",
+  "soundOnBreakEnd",
   "showExercises",
   "strictBreak",
+  "launchAtLogin",
 ];
 
 let strings = null;
-let activeLocale = "ru";
+let activeLocale = "en";
 
-function t(key) {
+function t(key, params = {}) {
   if (!strings) return key;
   const parts = key.split(".");
   let value = strings;
   for (const part of parts) {
     value = value?.[part];
   }
-  return typeof value === "string" ? value : key;
+  if (typeof value !== "string") return key;
+  return value.replace(/\{\{(\w+)\}\}/g, (_, name) =>
+    params[name] != null ? String(params[name]) : "",
+  );
 }
 
 function applyTranslations(messages, locale) {
@@ -27,13 +33,27 @@ function applyTranslations(messages, locale) {
 
   document.querySelectorAll("[data-i18n]").forEach((el) => {
     const key = el.dataset.i18n;
-    const text = t(key);
-    if (el.tagName === "OPTION") {
-      el.textContent = text;
-    } else {
-      el.textContent = text;
-    }
+    el.textContent = t(key);
   });
+}
+
+function applyMeta({ appVersion, releasesUrl }) {
+  const versionEl = document.getElementById("app-version");
+  const linkEl = document.getElementById("releases-link");
+  if (versionEl) {
+    versionEl.textContent = t("settings.version", { version: appVersion });
+  }
+  if (linkEl) {
+    linkEl.textContent = t("settings.releases");
+    linkEl.href = releasesUrl;
+  }
+}
+
+function applyLaunchAtLoginVisibility(supported) {
+  const row = document.getElementById("launchAtLoginRow");
+  if (row) {
+    row.hidden = !supported;
+  }
 }
 
 function showBootError(message) {
@@ -47,7 +67,7 @@ function showBootError(message) {
 function fillForm(settings) {
   for (const key of fields) {
     const el = document.getElementById(key);
-    if (!el) continue;
+    if (!el || el.hidden) continue;
     if (el.type === "checkbox") {
       el.checked = !!settings[key];
     } else if (el.tagName === "SELECT") {
@@ -58,6 +78,13 @@ function fillForm(settings) {
   }
 }
 
+function applyPayload(data) {
+  applyTranslations(data.strings, data.locale);
+  applyMeta(data);
+  applyLaunchAtLoginVisibility(data.launchAtLoginSupported);
+  fillForm(data.settings);
+}
+
 async function load() {
   if (!window.catBreak?.getSettings) {
     showBootError("Failed to load UI. Please restart the app.");
@@ -66,8 +93,7 @@ async function load() {
 
   try {
     const data = await window.catBreak.getSettings();
-    applyTranslations(data.strings, data.locale);
-    fillForm(data.settings);
+    applyPayload(data);
   } catch (err) {
     console.error(err);
     showBootError(t("settings.loadError"));
@@ -78,7 +104,7 @@ function readForm() {
   const next = {};
   for (const key of fields) {
     const el = document.getElementById(key);
-    if (!el) continue;
+    if (!el || (el.closest("[hidden]") && key === "launchAtLogin")) continue;
     if (el.type === "checkbox") {
       next[key] = el.checked;
     } else if (key === "locale") {
@@ -86,6 +112,9 @@ function readForm() {
     } else {
       next[key] = Number.parseInt(el.value, 10);
     }
+  }
+  if (document.getElementById("launchAtLoginRow")?.hidden) {
+    next.launchAtLogin = false;
   }
   return next;
 }
@@ -106,8 +135,7 @@ document.getElementById("save")?.addEventListener("click", async () => {
 });
 
 window.catBreak.onSettingsUpdated((payload) => {
-  applyTranslations(payload.strings, payload.locale);
-  fillForm(payload.settings);
+  applyPayload(payload);
 });
 
 if (document.readyState === "loading") {
