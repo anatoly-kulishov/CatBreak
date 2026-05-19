@@ -1,6 +1,7 @@
 const countdownEl = document.getElementById("countdown");
 const hintEl = document.getElementById("hint");
 const exercisesEl = document.getElementById("exercises");
+const exercisesTitleEl = document.getElementById("exercises-title");
 const skipBtn = document.getElementById("skip");
 const catStageEl = document.getElementById("cat-stage");
 const neko1 = document.getElementById("neko1");
@@ -9,6 +10,7 @@ const sideEl = document.getElementById("side");
 
 let secondsLeft = 0;
 let isExiting = false;
+let strings = {};
 
 function formatClock(totalSeconds) {
   const m = Math.floor(totalSeconds / 60);
@@ -18,6 +20,22 @@ function formatClock(totalSeconds) {
 
 function renderTimer() {
   countdownEl.textContent = formatClock(secondsLeft);
+}
+
+function applyBreakStrings(s) {
+  strings = s || {};
+  document.title = strings.title || "Break";
+  if (exercisesTitleEl) {
+    exercisesTitleEl.textContent = strings.exercisesTitle || "";
+  }
+  const exerciseIds = ["exercise1", "exercise2", "exercise3", "exercise4"];
+  exerciseIds.forEach((key, index) => {
+    const el = document.getElementById(`exercise-${index + 1}`);
+    if (el) el.textContent = strings[key] || "";
+  });
+  if (skipBtn) {
+    skipBtn.textContent = strings.skip || "";
+  }
 }
 
 function getVisibleCatVideo() {
@@ -60,6 +78,7 @@ neko1.addEventListener("ended", () => {
 window.catBreak.onBreakInit((payload) => {
   secondsLeft = payload.totalSeconds;
   isExiting = false;
+  applyBreakStrings(payload.strings);
   renderTimer();
 
   document.body.classList.remove("is-fading-out");
@@ -77,15 +96,22 @@ window.catBreak.onBreakInit((payload) => {
 
   if (payload.showExercises) {
     exercisesEl.hidden = false;
+  } else {
+    exercisesEl.hidden = true;
   }
 
   if (!payload.strictBreak) {
     skipBtn.hidden = false;
-    hintEl.textContent = payload.demo
-      ? "Демо. Закроет все экраны сразу."
-      : "Закроет перерыв на всех экранах.";
+    if (payload.demo) {
+      hintEl.textContent = strings.hintDemo || "";
+    } else {
+      hintEl.textContent = strings.hintSkip || "";
+    }
   } else {
-    hintEl.textContent = payload.demo ? "Демо-перерыв" : "Отойдите от монитора.";
+    skipBtn.hidden = true;
+    hintEl.textContent = payload.demo
+      ? strings.hintDemoStrict || ""
+      : strings.hintStrict || "";
   }
 });
 

@@ -1,29 +1,30 @@
 # Cat Break
 
-Напоминания о перерывах для глаз: таймер в трее, полноэкранный оверлей на всех мониторах и кот.
+Eye break reminders for your desktop: a menu bar / system tray timer, a fullscreen overlay on every display, and a cat.
 
-**Платформы:** macOS · Windows · Linux (Electron)
+**Platforms:** macOS · Windows · Linux (Electron)
 
-## Возможности
+## Features
 
-- Таймер работы и перерыва (по умолчанию 55 / 5 минут)
-- Иконка в **системном трее** (меню macOS / область уведомлений Windows / AppIndicator Linux)
-- Полноэкранный перерыв на **каждом мониторе**
-- Анимация кота
-- Пауза таймера при простое
-- Упражнения для глаз, строгий режим, демо 30 сек
+- Work and break timer (default 55 / 5 minutes)
+- **System tray** icon (macOS menu bar, Windows notification area, Linux AppIndicator)
+- Fullscreen break overlay on **each monitor**
+- Cat animation on the break screen
+- Pauses the work timer while idle
+- Optional eye exercises, strict mode (no skip button), 30-second demo
+- **English** and **Russian** UI (Settings → Language)
 
-## Платформы
+## Platform support
 
-| Платформа | Статус | Сборка | Документация |
-|-----------|--------|--------|--------------|
-| **macOS** 12+ (Apple Silicon / Intel) | Основная | `npm run dist:mac` | [MACOS_INSTALL.md](docs/MACOS_INSTALL.md) |
-| **Windows** 10/11 x64, arm64 | Поддерживается | `npm run dist:win` | [WINDOWS_INSTALL.md](docs/WINDOWS_INSTALL.md) |
-| **Linux** x64 (AppImage, deb) | Поддерживается* | `npm run dist:linux` | [LINUX_INSTALL.md](docs/LINUX_INSTALL.md) |
+| Platform | Status | Build | Docs |
+|----------|--------|-------|------|
+| **macOS** 12+ (Apple Silicon / Intel) | Primary | `npm run dist:mac` | [MACOS_INSTALL.md](docs/MACOS_INSTALL.md) |
+| **Windows** 10/11 x64, arm64 | Supported | `npm run dist:win` | [WINDOWS_INSTALL.md](docs/WINDOWS_INSTALL.md) |
+| **Linux** x64 (AppImage, deb) | Supported* | `npm run dist:linux` | [LINUX_INSTALL.md](docs/LINUX_INSTALL.md) |
 
-\* На **Wayland** оверлей поверх всех окон может работать ограниченно; предпочтителен X11.
+\* On **Wayland**, the always-on-top overlay may be limited; **X11** works more reliably.
 
-## Быстрый старт
+## Quick start
 
 ```bash
 git clone https://github.com/anatoly-kulishov/CatBreak.git
@@ -32,46 +33,49 @@ npm install
 npm start
 ```
 
-ПКМ по иконке в трее → **Настройки**, **Демо (30 сек)**.
+Right-click the tray icon → **Settings**, **Demo (30 sec)**.
 
-## Сборка
+## Build
 
 ```bash
 npm install
-npm run prepare    # icon.ico для Windows
-npm run dist:mac   # DMG + ZIP (на macOS)
-npm run dist:win   # NSIS + portable (лучше на Windows; с Mac нужен Wine для NSIS)
-npm run dist:linux # AppImage + deb (лучше на Linux)
-npm run dist:all   # все три (долго; кросс-сборка с ограничениями)
+npm run prepare    # generates build/icon.ico for Windows
+npm run dist:mac   # DMG + ZIP (on macOS)
+npm run dist:win   # NSIS + portable (best on Windows; Wine needed on Mac for NSIS)
+npm run dist:linux # AppImage + deb (best on Linux)
+npm run dist:all   # all targets (slow; cross-compilation has limits)
 ```
 
-Артефакты в `dist/`.
+Output goes to `dist/`.
 
-### Сборка по ОС
+### Build by OS
 
-| Команда | Где запускать | Результат |
-|---------|---------------|-----------|
+| Command | Run on | Output |
+|---------|--------|--------|
 | `dist:mac` | macOS | `.dmg`, `.zip` |
-| `dist:win` | Windows (или macOS + Wine) | `Setup.exe`, portable |
+| `dist:win` | Windows (or macOS + Wine) | `Setup.exe`, portable `.exe` |
 | `dist:linux` | Linux | `.AppImage`, `.deb` |
 
-> **macOS:** не используйте `codesign --deep` на `.app` — ломает Electron Framework.
+> **macOS:** do not run `codesign --deep` on the `.app` — it breaks Electron Framework signatures and the app will crash on launch.
 
-## Использование
+## Usage
 
-1. Запустите приложение — иконка в трее.
-2. Дождитесь перерыва или **Начать перерыв сейчас** / **Демо (30 сек)**.
-3. По окончании таймера окна закроются сами.
-4. **Настройки** — интервалы, простой, упражнения, строгий режим.
+1. Launch the app — a tray icon appears.
+2. Wait for a break, or choose **Start break now** / **Demo (30 sec)**.
+3. When the timer ends, overlay windows close automatically.
+4. **Settings** — work/break intervals, idle pause, exercises, strict mode, language.
 
-На **Windows/Linux** обратный отсчёт в **подсказке** иконки; в строке меню macOS — также в заголовке иконки.
+On **Windows/Linux**, the countdown is shown in the tray **tooltip**. On **macOS**, it also appears next to the menu bar icon.
 
-## Структура
+## Project layout
 
 ```
 CatBreak/
 ├── main.js
-├── lib/platform.js   # ОС-специфичное поведение окон и трея
+├── lib/
+│   ├── platform.js   # OS-specific window & tray behavior
+│   └── i18n.js       # locales
+├── locales/          # en.json, ru.json
 ├── preload.js
 ├── src/
 ├── assets/
@@ -82,12 +86,14 @@ CatBreak/
 
 ## GitHub Releases
 
-Прикрепите к релизу артефакты своей платформы:
+Attach platform artifacts to each release:
 
 - macOS: `*.dmg`, `*-mac.zip`
-- Windows: `*Setup*.exe`, `*.exe` (portable)
+- Windows: `*Setup*.exe`, portable `*.exe`
 - Linux: `*.AppImage`, `*.deb`
 
-## Лицензия
+Unsigned builds: users may need **Right-click → Open** (macOS) or SmartScreen confirmation (Windows). See `docs/`.
 
-[MIT](LICENSE) · [ICON_CREDITS](build/ICON_CREDITS.txt)
+## License
+
+[MIT](LICENSE) · [Icon credits](build/ICON_CREDITS.txt)
