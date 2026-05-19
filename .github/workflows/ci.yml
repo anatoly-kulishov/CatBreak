@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  check:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - run: npm ci
+      - run: npm run prepare
+      - run: node --check main.js
+      - run: node --check lib/i18n.js
+      - run: node --check lib/platform.js
+      - run: node --check lib/autostart.js
+      - run: node --check preload.js

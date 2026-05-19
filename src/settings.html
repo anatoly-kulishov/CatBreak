@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="color-scheme" content="dark" />
@@ -48,6 +48,16 @@
     </label>
 
     <label class="row">
+      <input id="notifyBeforeBreak" type="checkbox" />
+      <span data-i18n="settings.notifyBeforeBreak"></span>
+    </label>
+
+    <label class="row">
+      <input id="soundOnBreakEnd" type="checkbox" />
+      <span data-i18n="settings.soundOnBreakEnd"></span>
+    </label>
+
+    <label class="row">
       <input id="showExercises" type="checkbox" />
       <span data-i18n="settings.showExercises"></span>
     </label>
@@ -57,11 +67,25 @@
       <span data-i18n="settings.strictBreak"></span>
     </label>
 
+    <label id="launchAtLoginRow" class="row" hidden>
+      <input id="launchAtLogin" type="checkbox" />
+      <span>
+        <span data-i18n="settings.launchAtLogin"></span>
+        <small class="note" data-i18n="settings.launchAtLoginNote"></small>
+      </span>
+    </label>
+
     <div class="actions">
       <button id="save" type="button" data-i18n="settings.save"></button>
     </div>
 
     <p id="status" class="status"></p>
+
+    <footer class="meta">
+      <span id="app-version"></span>
+      ·
+      <a id="releases-link" href="#" target="_blank" rel="noopener noreferrer"></a>
+    </footer>
 
     <script src="settings.js"></script>
   </body>

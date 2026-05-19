@@ -11,10 +11,16 @@
     "workPrefix": "Break in",
     "startNow": "Start break now",
     "demo": "Demo (30 sec)",
+    "postpone5": "Postpone break (+5 min)",
+    "postpone10": "Postpone break (+10 min)",
     "endBreak": "End break (all screens)",
     "settings": "Settings…",
     "resetWork": "Reset work timer",
     "quit": "Quit"
+  },
+  "notify": {
+    "title": "Cat Break",
+    "body": "Break in 1 minute — get ready to rest your eyes"
   },
   "settings": {
     "sub": "Eye break reminders. Screen recording is not used.",
@@ -23,12 +29,18 @@
     "idlePauseMinutes": "Pause timer when idle (min)",
     "showExercises": "Show eye exercises",
     "strictBreak": "Strict break (no End button)",
+    "notifyBeforeBreak": "Notify 1 minute before break",
+    "soundOnBreakEnd": "Play sound when break ends",
+    "launchAtLogin": "Launch at login",
+    "launchAtLoginNote": "macOS and Windows only",
     "language": "Language",
     "localeAuto": "System default",
     "localeRu": "Русский",
     "localeEn": "English",
     "save": "Save",
     "saved": "Saved",
+    "version": "Version {{version}}",
+    "releases": "Releases",
     "bootError": "Failed to load UI. Please restart the app.",
     "loadError": "Could not load settings.",
     "saveError": "Could not save settings."

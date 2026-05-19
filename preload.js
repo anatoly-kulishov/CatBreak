@@ -16,4 +16,7 @@ contextBridge.exposeInMainWorld("catBreak", {
   onSettingsUpdated: (cb) => {
     ipcRenderer.on("settings-updated", (_e, payload) => cb(payload));
   },
+  onBreakLocaleUpdate: (cb) => {
+    ipcRenderer.on("break-locale-update", (_e, payload) => cb(payload));
+  },
 });
