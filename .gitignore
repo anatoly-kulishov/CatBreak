@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+*.dmg
+*.zip
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local / env
+.env
+.env.*
+
+# Regenerable icon set (keep icon.png + icon.icns)
+build/icon.iconset/
+
+# Electron
+out/

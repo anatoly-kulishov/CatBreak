@@ -1,0 +1,86 @@
+{
+  "name": "cat-break-desktop",
+  "version": "1.0.0",
+  "description": "Напоминания о перерывах с полноэкранным оверлеем и котом (macOS, Windows, Linux)",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "prepare": "node scripts/prepare-icons.js",
+    "pack": "npm run prepare && electron-builder --dir",
+    "dist": "npm run dist:mac",
+    "dist:mac": "npm run prepare && electron-builder --mac && cp docs/MACOS_INSTALL.md dist/",
+    "dist:win": "npm run prepare && electron-builder --win",
+    "dist:linux": "npm run prepare && electron-builder --linux",
+    "dist:all": "npm run prepare && electron-builder -mwl"
+  },
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anatoly-kulishov/CatBreak.git"
+  },
+  "keywords": [
+    "electron",
+    "break-reminder",
+    "eye-health",
+    "pomodoro",
+    "macos",
+    "windows",
+    "linux"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "electron": "^35.0.0",
+    "electron-builder": "^25.1.8",
+    "png-to-ico": "^2.1.8"
+  },
+  "build": {
+    "appId": "com.catbreak.desktop",
+    "productName": "Cat Break",
+    "files": [
+      "main.js",
+      "preload.js",
+      "lib/**/*",
+      "src/**/*",
+      "assets/**/*",
+      "build/icon.icns",
+      "build/icon.ico",
+      "build/icon.png"
+    ],
+    "mac": {
+      "category": "public.app-category.healthcare-fitness",
+      "icon": "build/icon.icns",
+      "target": ["dmg", "zip"]
+    },
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64", "arm64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerLanguages": ["ru", "en"]
+    },
+    "linux": {
+      "icon": "build/icon.png",
+      "category": "Utility",
+      "target": ["AppImage", "deb"],
+      "desktop": {
+        "Name": "Cat Break",
+        "Comment": "Break reminders for your eyes",
+        "Categories": "Utility;"
+      }
+    }
+  }
+}

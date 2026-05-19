@@ -1,0 +1,16 @@
+const { contextBridge, ipcRenderer } = require("electron");
+
+contextBridge.exposeInMainWorld("catBreak", {
+  getSettings: () => ipcRenderer.invoke("get-settings"),
+  saveSettings: (settings) => ipcRenderer.invoke("save-settings", settings),
+  skipBreak: () => ipcRenderer.invoke("skip-break"),
+  onBreakInit: (cb) => {
+    ipcRenderer.on("break-init", (_e, payload) => cb(payload));
+  },
+  onBreakTick: (cb) => {
+    ipcRenderer.on("break-tick", (_e, payload) => cb(payload));
+  },
+  onBreakExitRequest: (cb) => {
+    ipcRenderer.on("break-exit-request", (_e, payload) => cb(payload));
+  },
+});
