@@ -40,6 +40,27 @@ npm run dist:win
 
 Artifacts: `dist/Cat Break Setup *.exe`, portable `.exe`.
 
+### Build error: “Cannot create symbolic link” (winCodeSign)
+
+If `electron-builder` fails while extracting `winCodeSign` with **Cannot create symbolic link**, Windows blocked symlink creation (no code signing certificate is used anyway).
+
+**Fix (pick one):**
+
+1. **Recommended:** pull the latest `package.json` — unsigned Windows builds set `signAndEditExecutable: false` so `winCodeSign` is not needed.
+2. **Settings → Privacy & security → For developers** → enable **Developer Mode**, then delete the cache folder and rebuild:
+   ```bat
+   rmdir /s /q "%LOCALAPPDATA%\electron-builder\Cache\winCodeSign"
+   npm run dist:win
+   ```
+3. Run **Command Prompt as Administrator** and run `npm run dist:win` again.
+
+Optional env var (unsigned build):
+
+```bat
+set CSC_IDENTITY_AUTO_DISCOVERY=false
+npm run dist:win
+```
+
 ## Known limitations
 
 - Always-on-top overlay behavior depends on Windows version and fullscreen apps (e.g. games).
