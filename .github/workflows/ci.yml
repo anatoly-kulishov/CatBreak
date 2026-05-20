@@ -24,3 +24,4 @@ jobs:
       - run: node --check lib/platform.js
       - run: node --check lib/autostart.js
       - run: node --check preload.js
+      - run: node --check landing/download.js
