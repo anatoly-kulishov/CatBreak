@@ -219,6 +219,22 @@ function currentLang() {
   return document.documentElement.lang === "ru" ? "ru" : "en";
 }
 
+const LOADING_LABELS = {
+  en: "Fetching release…",
+  ru: "Загрузка релиза…",
+};
+
+function syncLoadingLabel() {
+  const label = document.getElementById("download-loading-label");
+  const wrap = document.getElementById("download-status");
+  if (!label || !wrap || wrap.hidden) return;
+  label.textContent = LOADING_LABELS[currentLang()] ?? LOADING_LABELS.en;
+}
+
+function setVersionPillPending(on) {
+  document.getElementById("latest-version")?.classList.toggle("version-pill--pending", on);
+}
+
 /**
  * @param {HTMLUListElement} ul
  * @param {GHAsset[]} items
@@ -314,11 +330,14 @@ function initPlatformPickers() {
 
 function toggleLoading(on) {
   const el = document.getElementById("download-status");
-  if (el) el.hidden = !on;
+  if (!el) return;
+  el.hidden = !on;
+  if (on) syncLoadingLabel();
 }
 
 async function injectLatestRelease() {
   toggleLoading(true);
+  setVersionPillPending(true);
   closeAllPlatformMenus();
   try {
     const res = await fetch(API_URL, { headers: { Accept: "application/vnd.github+json" } });
@@ -336,6 +355,7 @@ async function injectLatestRelease() {
     if (versionEl) versionEl.textContent = "?";
   } finally {
     releaseFetchAttempted = true;
+    setVersionPillPending(false);
     renderPlatformMenus();
     toggleLoading(false);
   }
@@ -394,6 +414,8 @@ function applyLang(lng) {
       el.textContent = lng === "ru" ? pair.ru : pair.en;
     }
   });
+
+  syncLoadingLabel();
 }
 
 document.addEventListener("DOMContentLoaded", () => {

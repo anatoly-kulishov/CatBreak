@@ -125,13 +125,40 @@ a:hover {
 
 .version-pill {
   display: inline-block;
-  margin-bottom: 0.85rem;
+  margin: 0 0 0.85rem;
   padding: 0.2rem 0.65rem;
   border-radius: 999px;
   font-size: 0.8rem;
   background: rgba(110, 231, 255, 0.1);
   color: var(--accent);
   border: 1px solid rgba(110, 231, 255, 0.25);
+  transition:
+    opacity 0.25s ease,
+    filter 0.25s ease;
+}
+
+.version-pill--pending {
+  opacity: 0.72;
+  animation: version-pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes version-pulse {
+  50% {
+    opacity: 1;
+    filter: brightness(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .version-pill--pending {
+    animation: none;
+    opacity: 0.85;
+  }
+
+  .spinner-inline {
+    animation: none;
+    border-top-color: rgba(110, 231, 255, 0.55);
+  }
 }
 
 .download-platform {
@@ -149,6 +176,13 @@ a:hover {
 .download-platform__spinner {
   display: inline-flex;
   align-items: center;
+  gap: 0.45rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.download-loading-label {
+  white-space: nowrap;
 }
 
 .platform-bar {

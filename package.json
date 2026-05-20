@@ -1,6 +1,6 @@
 {
   "name": "cat-break-desktop",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Eye break reminders with fullscreen overlay and cat mascot (macOS, Windows, Linux)",
   "main": "main.js",
   "scripts": {
