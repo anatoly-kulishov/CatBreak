@@ -13,7 +13,7 @@
   <body>
     <div class="page">
       <header class="top">
-        <p class="version-pill" id="latest-version" aria-live="polite">—</p>
+        <p class="version-pill version-pill--pending" id="latest-version" aria-live="polite">—</p>
         <div class="lang-switch" role="group" aria-label="Language">
           <button type="button" data-lang-set="en" aria-selected="true">EN</button>
           <button type="button" data-lang-set="ru" aria-selected="false">RU</button>
@@ -57,6 +57,7 @@
             <div class="download-platform__toolbar">
               <span id="download-status" class="download-platform__spinner" aria-live="polite" hidden>
                 <span class="spinner-inline" aria-hidden="true"></span>
+                <span id="download-loading-label" class="download-loading-label"></span>
               </span>
 
               <div class="platform-bar" role="presentation">

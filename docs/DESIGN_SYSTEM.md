@@ -48,7 +48,11 @@ linear-gradient(160deg, #5dd5ea, #3994ff);
 **Полупрозрачные границы:** `rgba(255, 255, 255, 0.06–0.12)`  
 **Панели:** `background: rgba(255, 255, 255, 0.03)`, border `rgba(255, 255, 255, 0.08)`
 
-### Legacy (app UI — пока не трогать без задачи)
+### App UI (`src/settings.css`, `src/break.css`)
+
+С **v1.0.2** окна приложения используют ту же палитру, что и лендинг: `--bg`, `--surface`, `--text`, `--muted`, акцент **`--accent` (#6ee7ff)** и градиент для основной кнопки. Полноэкранный перерыв: обновлённые таймер, боковая панель и кнопка пропуска в этом же ключе; учитывается `prefers-reduced-motion`.
+
+### Ранее (до v1.0.2)
 
 | Файл | Фон | CTA |
 |------|-----|-----|
@@ -59,12 +63,12 @@ linear-gradient(160deg, #5dd5ea, #3994ff);
 
 ## 3. Типографика
 
-| Элемент | Landing | App (legacy) |
-|---------|---------|--------------|
-| Font stack | `--font`: SF Pro Text, system-ui… | `system-ui, -apple-system, sans-serif` |
-| H1 / tagline | `clamp(1.75rem, 4vw, 2.25rem)`, weight 650, letter-spacing −0.03em | settings: 20px |
-| Lead / body | 1.06rem / 0.93rem | 13–14px |
-| Мелкий текст | 0.85–0.92rem (`--muted`) | 12–13px `#999` |
+| Элемент | Landing | App |
+|---------|---------|-----|
+| Font stack | `--font`: SF Pro Text, system-ui… | system-ui, Apple, Segoe UI… |
+| H1 / tagline | `clamp(1.75rem, 4vw, 2.25rem)`, weight 650, letter-spacing −0.03em | settings header ~1.35rem |
+| Lead / body | 1.06rem / 0.93rem | 14px base, секции с uppercase-подзаголовками |
+| Мелкий текст | 0.85–0.92rem (`--muted`) | hints ~0.75rem `--muted` |
 
 ---
 
