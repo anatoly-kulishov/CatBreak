@@ -105,8 +105,18 @@ function labelWin(name) {
     return { en: "Windows · Portable (x64)", ru: "Windows · Portable (x64)" };
   if (n.includes("arm64") || n.includes("aarch64"))
     return { en: "Windows · Installer (arm64)", ru: "Windows · Установщик (arm64)" };
-  if (n.includes("x64") || n.includes("x86_64") || n.endsWith(".exe"))
+  if (n.includes("setup"))
+    return {
+      en: "Windows · Installer (NSIS, x64 + arm64)",
+      ru: "Windows · Установщик (NSIS, x64 + arm64)",
+    };
+  if (n.includes("x64") || n.includes("x86_64"))
     return { en: "Windows · Installer (x64)", ru: "Windows · Установщик (x64)" };
+  if (/\.exe$/i.test(name))
+    return {
+      en: "Windows · Portable (x64, no install)",
+      ru: "Windows · Portable (x64, без установки)",
+    };
   return { en: `Windows · ${name}`, ru: `Windows · ${name}` };
 }
 
@@ -162,7 +172,9 @@ function sortMac(list) {
 function sortWin(list) {
   const score = (name) => {
     const n = name.toLowerCase();
-    if (n.includes("portable")) return 2;
+    const portableLike =
+      n.includes("portable") || (!n.includes("setup") && /\.exe$/i.test(name));
+    if (portableLike) return 2;
     if (n.includes("arm64") || n.includes("aarch64")) return 1;
     return 0;
   };
