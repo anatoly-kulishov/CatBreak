@@ -119,13 +119,50 @@ function buildTrayMenu() {
   const tr = getTranslator();
   const clock = formatClock(onBreak ? breakSecondsLeft : workSecondsLeft);
 
+  const statusItem = {
+    label: onBreak
+      ? tr.t("tray.breakStatus", { clock })
+      : tr.t("tray.workStatus", { clock }),
+    enabled: false,
+  };
+
+  if (onBreak) {
+    return Menu.buildFromTemplate([
+      statusItem,
+      { type: "separator" },
+      {
+        label: tr.t("tray.endBreak"),
+        click: () => requestBreakExit({ fast: true }),
+      },
+      { type: "separator" },
+      {
+        label: tr.t("tray.startNow"),
+        click: () => startBreak({ demo: false }),
+      },
+      {
+        label: tr.t("tray.demo"),
+        click: () => startBreak({ demo: true, seconds: 30 }),
+      },
+      {
+        label: tr.t("tray.resetWork"),
+        enabled: false,
+        click: () => {},
+      },
+      { type: "separator" },
+      {
+        label: tr.t("tray.settings"),
+        click: openSettings,
+      },
+      { type: "separator" },
+      {
+        label: tr.t("tray.quit"),
+        click: () => app.quit(),
+      },
+    ]);
+  }
+
   return Menu.buildFromTemplate([
-    {
-      label: onBreak
-        ? tr.t("tray.breakStatus", { clock })
-        : tr.t("tray.workStatus", { clock }),
-      enabled: false,
-    },
+    statusItem,
     { type: "separator" },
     {
       label: tr.t("tray.startNow"),
@@ -135,36 +172,23 @@ function buildTrayMenu() {
       label: tr.t("tray.demo"),
       click: () => startBreak({ demo: true, seconds: 30 }),
     },
-    ...(!onBreak
-      ? [
-          {
-            label: tr.t("tray.postpone5"),
-            click: () => postponeBreak(5),
-          },
-          {
-            label: tr.t("tray.postpone10"),
-            click: () => postponeBreak(10),
-          },
-        ]
-      : []),
-    ...(onBreak
-      ? [
-          {
-            label: tr.t("tray.endBreak"),
-            click: () => requestBreakExit({ fast: true }),
-          },
-          { type: "separator" },
-        ]
-      : []),
+    { type: "separator" },
     {
-      label: tr.t("tray.settings"),
-      click: openSettings,
+      label: tr.t("tray.postpone5"),
+      click: () => postponeBreak(5),
+    },
+    {
+      label: tr.t("tray.postpone10"),
+      click: () => postponeBreak(10),
     },
     {
       label: tr.t("tray.resetWork"),
-      click: () => {
-        if (!onBreak) resetWorkTimer();
-      },
+      click: () => resetWorkTimer(),
+    },
+    { type: "separator" },
+    {
+      label: tr.t("tray.settings"),
+      click: openSettings,
     },
     { type: "separator" },
     {
@@ -370,7 +394,7 @@ function openSettings() {
 
   settingsWindow = new BrowserWindow({
     width: 400,
-    height: 580,
+    height: 680,
     resizable: false,
     show: false,
     backgroundColor: "#1a1a1a",

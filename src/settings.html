@@ -9,77 +9,75 @@
     />
     <title>Settings</title>
     <link rel="stylesheet" href="settings.css" />
-    <style>
-      html,
-      body {
-        margin: 0;
-        min-height: 100%;
-        background: #1a1a1a;
-        color: #fff;
-      }
-    </style>
   </head>
   <body>
-    <h1>Cat Break</h1>
-    <p class="sub" data-i18n="settings.sub"></p>
+    <header class="settings-header">
+      <h1>Cat Break</h1>
+      <p class="sub" data-i18n="settings.sub"></p>
+    </header>
 
-    <label>
-      <span data-i18n="settings.language"></span>
-      <select id="locale">
-        <option value="auto" data-i18n="settings.localeAuto"></option>
-        <option value="ru" data-i18n="settings.localeRu"></option>
-        <option value="en" data-i18n="settings.localeEn"></option>
-      </select>
-    </label>
+    <section class="settings-section" aria-labelledby="sec-general">
+      <h2 id="sec-general" class="settings-section__title" data-i18n="settings.sectionGeneral"></h2>
+      <label class="field">
+        <span class="field__label" data-i18n="settings.language"></span>
+        <select id="locale">
+          <option value="auto" data-i18n="settings.localeAuto"></option>
+          <option value="ru" data-i18n="settings.localeRu"></option>
+          <option value="en" data-i18n="settings.localeEn"></option>
+        </select>
+      </label>
+    </section>
 
-    <label>
-      <span data-i18n="settings.workMinutes"></span>
-      <input id="workMinutes" type="number" min="1" max="480" />
-    </label>
+    <section class="settings-section" aria-labelledby="sec-timing">
+      <h2 id="sec-timing" class="settings-section__title" data-i18n="settings.sectionTiming"></h2>
+      <label class="field">
+        <span class="field__label" data-i18n="settings.workMinutes"></span>
+        <input id="workMinutes" type="number" min="1" max="480" />
+      </label>
+      <label class="field">
+        <span class="field__label" data-i18n="settings.breakMinutes"></span>
+        <input id="breakMinutes" type="number" min="1" max="60" />
+      </label>
+      <label class="field">
+        <span class="field__label" data-i18n="settings.idlePauseMinutes"></span>
+        <input id="idlePauseMinutes" type="number" min="1" max="30" />
+      </label>
+      <p class="field-hint" data-i18n="settings.idlePauseHint"></p>
+    </section>
 
-    <label>
-      <span data-i18n="settings.breakMinutes"></span>
-      <input id="breakMinutes" type="number" min="1" max="60" />
-    </label>
-
-    <label>
-      <span data-i18n="settings.idlePauseMinutes"></span>
-      <input id="idlePauseMinutes" type="number" min="1" max="30" />
-    </label>
-
-    <label class="row">
-      <input id="notifyBeforeBreak" type="checkbox" />
-      <span data-i18n="settings.notifyBeforeBreak"></span>
-    </label>
-
-    <label class="row">
-      <input id="soundOnBreakEnd" type="checkbox" />
-      <span data-i18n="settings.soundOnBreakEnd"></span>
-    </label>
-
-    <label class="row">
-      <input id="showExercises" type="checkbox" />
-      <span data-i18n="settings.showExercises"></span>
-    </label>
-
-    <label class="row">
-      <input id="strictBreak" type="checkbox" />
-      <span data-i18n="settings.strictBreak"></span>
-    </label>
-
-    <label id="launchAtLoginRow" class="row" hidden>
-      <input id="launchAtLogin" type="checkbox" />
-      <span>
-        <span data-i18n="settings.launchAtLogin"></span>
-        <small class="note" data-i18n="settings.launchAtLoginNote"></small>
-      </span>
-    </label>
+    <section class="settings-section" aria-labelledby="sec-behavior">
+      <h2 id="sec-behavior" class="settings-section__title" data-i18n="settings.sectionBehavior"></h2>
+      <label class="row">
+        <input id="notifyBeforeBreak" type="checkbox" />
+        <span data-i18n="settings.notifyBeforeBreak"></span>
+      </label>
+      <label class="row">
+        <input id="soundOnBreakEnd" type="checkbox" />
+        <span data-i18n="settings.soundOnBreakEnd"></span>
+      </label>
+      <label class="row">
+        <input id="showExercises" type="checkbox" />
+        <span data-i18n="settings.showExercises"></span>
+      </label>
+      <label class="row">
+        <input id="strictBreak" type="checkbox" />
+        <span data-i18n="settings.strictBreak"></span>
+      </label>
+      <p class="field-hint field-hint--tight" data-i18n="settings.strictBreakHint"></p>
+      <label id="launchAtLoginRow" class="row row--spaced" hidden>
+        <input id="launchAtLogin" type="checkbox" />
+        <span>
+          <span data-i18n="settings.launchAtLogin"></span>
+          <small class="note" data-i18n="settings.launchAtLoginNote"></small>
+        </span>
+      </label>
+    </section>
 
     <div class="actions">
       <button id="save" type="button" data-i18n="settings.save"></button>
     </div>
 
-    <p id="status" class="status"></p>
+    <p id="status" class="status" role="status"></p>
 
     <footer class="meta">
       <span id="app-version"></span>

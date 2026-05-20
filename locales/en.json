@@ -24,6 +24,11 @@
   },
   "settings": {
     "sub": "Eye break reminders. Screen recording is not used.",
+    "sectionGeneral": "General",
+    "sectionTiming": "Timing",
+    "sectionBehavior": "Break behavior",
+    "idlePauseHint": "If the mouse and keyboard are still for this long, the work timer pauses.",
+    "strictBreakHint": "Hides the early exit button so the full break runs on every screen.",
     "workMinutes": "Work minutes before break",
     "breakMinutes": "Break length (minutes)",
     "idlePauseMinutes": "Pause timer when idle (min)",

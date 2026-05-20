@@ -56,12 +56,15 @@ function applyLaunchAtLoginVisibility(supported) {
   }
 }
 
-function showBootError(message) {
+function setStatus(message, variant) {
   const status = document.getElementById("status");
-  if (status) {
-    status.style.color = "#f5a097";
-    status.textContent = message;
-  }
+  if (!status) return;
+  status.textContent = message;
+  status.classList.toggle("status--error", variant === "error");
+}
+
+function showBootError(message) {
+  setStatus(message, "error");
 }
 
 function fillForm(settings) {
@@ -122,12 +125,14 @@ function readForm() {
 document.getElementById("save")?.addEventListener("click", async () => {
   try {
     await window.catBreak.saveSettings(readForm());
+    setStatus(t("settings.saved"), "success");
     const status = document.getElementById("status");
-    status.style.color = "#8bc48a";
-    status.textContent = t("settings.saved");
-    setTimeout(() => {
-      status.textContent = "";
-    }, 2000);
+    window.setTimeout(() => {
+      if (status?.textContent === t("settings.saved")) {
+        status.textContent = "";
+        status.classList.remove("status--error");
+      }
+    }, 2200);
   } catch (err) {
     console.error(err);
     showBootError(t("settings.saveError"));
