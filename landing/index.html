@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cat Break — download</title>
+    <meta
+      name="description"
+      content="Cat Break: eye break reminders with a fullscreen cat overlay. Download for macOS, Windows, and Linux."
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="top">
+        <p class="version-pill" id="latest-version" aria-live="polite">—</p>
+        <div class="lang-switch" role="group" aria-label="Language">
+          <button type="button" data-lang-set="en" aria-selected="true">EN</button>
+          <button type="button" data-lang-set="ru" aria-selected="false">RU</button>
+        </div>
+      </header>
+
+      <section class="hero">
+        <div class="hero__icon-wrap">
+          <img
+            id="app-icon"
+            class="hero__icon"
+            src="app-icon.png"
+            width="256"
+            height="256"
+            alt=""
+            decoding="async"
+          />
+        </div>
+        <div>
+          <div data-lang-panel="en">
+            <h1 class="tagline">Cat Break</h1>
+            <p class="lead">
+              Eye break reminders for your desktop: tray timer, fullscreen overlay, and a friendly cat.
+              Builds are attached to the latest
+              <a href="#" data-releases-link="">GitHub Release</a>.
+            </p>
+          </div>
+          <div data-lang-panel="ru" hidden>
+            <h1 class="tagline">Cat Break</h1>
+            <p class="lead">
+              Напоминания о перерыве для глаз: таймер в трее, полноэкранный оверлей и котик. Сборки лежат в последнем
+              <a href="#" data-releases-link="">GitHub Release</a>.
+            </p>
+          </div>
+
+          <section
+            id="download-platform"
+            class="download-platform"
+            aria-label="Downloads by platform"
+          >
+            <div class="download-platform__toolbar">
+              <span id="download-status" class="download-platform__spinner" aria-live="polite" hidden>
+                <span class="spinner-inline" aria-hidden="true"></span>
+              </span>
+
+              <div class="platform-bar" role="presentation">
+                <div class="platform-picker" data-platform="mac">
+                  <button
+                    type="button"
+                    class="platform-picker__toggle"
+                    aria-expanded="false"
+                    aria-haspopup="true"
+                  >
+                    <span class="platform-picker__logo" aria-hidden="true"></span>
+                    <span data-i18n-toggle="mac">macOS</span>
+                    <span class="platform-picker__chevron" aria-hidden="true"></span>
+                  </button>
+                  <ul class="platform-picker__menu" role="menu" hidden></ul>
+                </div>
+
+                <div class="platform-picker" data-platform="win">
+                  <button
+                    type="button"
+                    class="platform-picker__toggle"
+                    aria-expanded="false"
+                    aria-haspopup="true"
+                  >
+                    <span class="platform-picker__logo platform-picker__logo--win" aria-hidden="true"></span>
+                    <span data-i18n-toggle="win">Windows</span>
+                    <span class="platform-picker__chevron" aria-hidden="true"></span>
+                  </button>
+                  <ul class="platform-picker__menu" role="menu" hidden></ul>
+                </div>
+
+                <div class="platform-picker" data-platform="linux">
+                  <button
+                    type="button"
+                    class="platform-picker__toggle"
+                    aria-expanded="false"
+                    aria-haspopup="true"
+                  >
+                    <span class="platform-picker__logo platform-picker__logo--linux" aria-hidden="true"></span>
+                    <span data-i18n-toggle="linux">Linux</span>
+                    <span class="platform-picker__chevron" aria-hidden="true"></span>
+                  </button>
+                  <ul class="platform-picker__menu" role="menu" hidden></ul>
+                </div>
+              </div>
+            </div>
+
+            <p class="platform-hint" data-lang-panel="en">
+              Choose your platform, then a build. If a direct file is missing, the link opens the release page — scroll
+              to <strong>Assets</strong>.
+            </p>
+            <p class="platform-hint" data-lang-panel="ru" hidden>
+              Выберите систему и вариант сборки. Если файла нет в списке, откроется страница релиза — блок
+              <strong>Assets</strong>.
+            </p>
+
+            <div id="download-note" class="panel download-platform__note" hidden role="status">
+              <div data-lang-panel="en">
+                <strong>Downloads</strong>
+                <p>
+                  We could not list files automatically (offline API, missing release, or no artifacts). Pick a build under
+                  <a href="#" data-releases-link="">Releases → Assets</a>.
+                </p>
+              </div>
+              <div data-lang-panel="ru" hidden>
+                <strong>Скачивание</strong>
+                <p>
+                  Список файлов не удалось загрузить (сеть, нет релиза или нет файлов в Assets). Выберите сборку в
+                  <a href="#" data-releases-link="">Releases → Assets</a>.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <nav class="secondary-links">
+            <a href="https://github.com/anatoly-kulishov/CatBreak">GitHub repo</a>
+            <a href="https://github.com/anatoly-kulishov/CatBreak/blob/main/docs/en/MACOS_INSTALL.md"
+              >macOS install notes</a
+            >
+            <a href="https://github.com/anatoly-kulishov/CatBreak/blob/main/docs/en/WINDOWS_INSTALL.md"
+              >Windows install notes</a
+            >
+            <a href="https://github.com/anatoly-kulishov/CatBreak/blob/main/docs/en/LINUX_INSTALL.md"
+              >Linux install notes</a
+            >
+          </nav>
+        </div>
+      </section>
+
+      <aside class="panel" id="install-hint">
+        <div data-os-hint="mac" data-lang-panel="en" hidden>
+          <h2>Unsigned build (macOS)</h2>
+          <p>
+            Gatekeeper may block the app the first time. Use <strong>Right-click → Open</strong>, or see
+            <a href="https://github.com/anatoly-kulishov/CatBreak/blob/main/docs/en/MACOS_INSTALL.md">macOS install notes</a>.
+          </p>
+        </div>
+        <div data-os-hint="mac" data-lang-panel="ru" hidden>
+          <h2>Без подписи (macOS)</h2>
+          <p>
+            Gatekeeper может заблокировать приложение. Один раз: <strong>ПКМ → Открыть</strong>, либо
+            <a href="https://github.com/anatoly-kulishov/CatBreak/blob/main/docs/ru/MACOS_INSTALL.md">заметка по установке</a>.
+          </p>
+        </div>
+        <div data-os-hint="win" data-lang-panel="en" hidden>
+          <h2>Unsigned build (Windows)</h2>
+          <p>
+            SmartScreen may warn about an unknown publisher. Choose <strong>More info → Run anyway</strong>, or see
+            <a href="https://github.com/anatoly-kulishov/CatBreak/blob/main/docs/en/WINDOWS_INSTALL.md">Windows install notes</a>.
+          </p>
+        </div>
+        <div data-os-hint="win" data-lang-panel="ru" hidden>
+          <h2>Без подписи (Windows)</h2>
+          <p>
+            SmartScreen может предупредить об издателе. <strong>Подробнее → Выполнить в любом случае</strong>, либо
+            <a href="https://github.com/anatoly-kulishov/CatBreak/blob/main/docs/ru/WINDOWS_INSTALL.md">заметка по установке</a>.
+          </p>
+        </div>
+        <div data-os-hint="linux" data-lang-panel="en" hidden>
+          <h2>Linux packages</h2>
+          <p>
+            AppImage: <code>chmod +x</code> then run. For <code>.deb</code>, use your package manager. See
+            <a href="https://github.com/anatoly-kulishov/CatBreak/blob/main/docs/en/LINUX_INSTALL.md">Linux install notes</a>.
+          </p>
+        </div>
+        <div data-os-hint="linux" data-lang-panel="ru" hidden>
+          <h2>Linux</h2>
+          <p>
+            AppImage: <code>chmod +x</code> и запуск. Для <code>.deb</code> — через менеджер пакетов. См.
+            <a href="https://github.com/anatoly-kulishov/CatBreak/blob/main/docs/ru/LINUX_INSTALL.md">заметку по установке</a>.
+          </p>
+        </div>
+        <div data-os-hint="any" data-lang-panel="en" hidden>
+          <h2>Install notes</h2>
+          <p>Pick your platform above. Unsigned builds — see install notes for macOS, Windows, or Linux in the repo docs.</p>
+        </div>
+        <div data-os-hint="any" data-lang-panel="ru" hidden>
+          <h2>Установка</h2>
+          <p>Выберите систему выше. Сборки без подписи — см. заметки по установке для macOS, Windows и Linux в репозитории.</p>
+        </div>
+      </aside>
+
+      <footer class="page-foot">
+        <span data-lang-panel="en">MIT · Not medical advice · Kind to your eyes</span>
+        <span data-lang-panel="ru" hidden>MIT · Не медсовет · Берегите глаза</span>
+      </footer>
+    </div>
+
+    <script src="download.js"></script>
+  </body>
+</html>
