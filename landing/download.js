@@ -88,13 +88,31 @@ function filterAssets(raw) {
 /** @param {string} name */
 function labelMac(name) {
   const n = name.toLowerCase();
+  const dmg = /\.dmg$/i.test(name);
+  const zip = /\.zip$/i.test(name);
+  const fmt =
+    dmg || zip
+      ? dmg
+        ? { en: " · DMG", ru: " · DMG" }
+        : { en: " · ZIP", ru: " · ZIP" }
+      : { en: "", ru: "" };
+
   if (n.includes("universal"))
-    return { en: "macOS · Universal", ru: "macOS · Universal" };
+    return {
+      en: `macOS · Universal${fmt.en}`,
+      ru: `macOS · Universal${fmt.ru}`,
+    };
   if (n.includes("arm64") || n.includes("aarch64"))
-    return { en: "macOS · Apple Silicon", ru: "macOS · Apple Silicon" };
+    return {
+      en: `macOS · Apple Silicon${fmt.en}`,
+      ru: `macOS · Apple Silicon${fmt.ru}`,
+    };
   if (n.includes("x64") || n.includes("x86_64") || n.includes("intel"))
-    return { en: "macOS · Intel (x64)", ru: "macOS · Intel (x64)" };
-  const ext = /\.dmg$/i.test(name) ? ".dmg" : /\.zip$/i.test(name) ? ".zip" : "";
+    return {
+      en: `macOS · Intel (x64)${fmt.en}`,
+      ru: `macOS · Intel (x64)${fmt.ru}`,
+    };
+  const ext = dmg ? ".dmg" : zip ? ".zip" : "";
   return { en: `macOS · Disk image ${ext}`, ru: `macOS · Образ ${ext}` };
 }
 
@@ -105,8 +123,18 @@ function labelWin(name) {
     return { en: "Windows · Portable (x64)", ru: "Windows · Portable (x64)" };
   if (n.includes("arm64") || n.includes("aarch64"))
     return { en: "Windows · Installer (arm64)", ru: "Windows · Установщик (arm64)" };
-  if (n.includes("x64") || n.includes("x86_64") || n.endsWith(".exe"))
+  if (n.includes("setup"))
+    return {
+      en: "Windows · Installer (NSIS, x64 + arm64)",
+      ru: "Windows · Установщик (NSIS, x64 + arm64)",
+    };
+  if (n.includes("x64") || n.includes("x86_64"))
     return { en: "Windows · Installer (x64)", ru: "Windows · Установщик (x64)" };
+  if (/\.exe$/i.test(name))
+    return {
+      en: "Windows · Portable (x64, no install)",
+      ru: "Windows · Portable (x64, без установки)",
+    };
   return { en: `Windows · ${name}`, ru: `Windows · ${name}` };
 }
 
@@ -150,19 +178,23 @@ function categorize(assets) {
 function sortMac(list) {
   const score = (name) => {
     const n = name.toLowerCase();
-    if (n.includes("universal")) return 0;
-    if (n.includes("arm64") || n.includes("aarch64")) return 1;
-    if (n.includes("x64") || n.includes("x86_64") || n.includes("intel")) return 2;
-    return 3;
+    let base = 3;
+    if (n.includes("universal")) base = 0;
+    else if (n.includes("arm64") || n.includes("aarch64")) base = 1;
+    else if (n.includes("x64") || n.includes("x86_64") || n.includes("intel")) base = 2;
+    const fmtOrder = /\.dmg$/i.test(name) ? 0 : /\.zip$/i.test(name) ? 1 : 2;
+    return base * 10 + fmtOrder;
   };
-  return [...list].sort((a, b) => score(a.name) - score(b.name));
+  return [...list].sort((a, b) => score(a.name) - score(b.name) || a.name.localeCompare(b.name));
 }
 
 /** @param {GHAsset[]} list */
 function sortWin(list) {
   const score = (name) => {
     const n = name.toLowerCase();
-    if (n.includes("portable")) return 2;
+    const portableLike =
+      n.includes("portable") || (!n.includes("setup") && /\.exe$/i.test(name));
+    if (portableLike) return 2;
     if (n.includes("arm64") || n.includes("aarch64")) return 1;
     return 0;
   };
