@@ -14,7 +14,7 @@
     "dist:linux": "npm run prepare && electron-builder --linux",
     "dist:all": "npm run prepare && electron-builder -mwl"
   },
-  "author": "",
+  "author": "Anatoly Kulishov <anatoly-kulishov@users.noreply.github.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -90,6 +90,7 @@
     "linux": {
       "icon": "build/icon.png",
       "category": "Utility",
+      "maintainer": "Anatoly Kulishov <anatoly-kulishov@users.noreply.github.com>",
       "target": [
         "AppImage",
         "deb"
