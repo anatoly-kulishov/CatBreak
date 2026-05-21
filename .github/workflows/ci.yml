@@ -23,5 +23,7 @@ jobs:
       - run: node --check lib/i18n.js
       - run: node --check lib/platform.js
       - run: node --check lib/autostart.js
+      - run: node --check lib/releases.js
+      - run: node --check lib/updater.js
       - run: node --check preload.js
       - run: node --check landing/download.js

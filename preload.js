@@ -5,6 +5,11 @@ contextBridge.exposeInMainWorld("catBreak", {
   saveSettings: (settings) => ipcRenderer.invoke("save-settings", settings),
   startDemoBreak: () => ipcRenderer.invoke("start-demo-break"),
   skipBreak: () => ipcRenderer.invoke("skip-break"),
+  openUpdateDownload: () => ipcRenderer.invoke("open-update-download"),
+  downloadUpdate: () => ipcRenderer.invoke("download-update"),
+  installUpdate: () => ipcRenderer.invoke("install-update"),
+  dismissUpdate: () => ipcRenderer.invoke("dismiss-update"),
+  checkForUpdates: () => ipcRenderer.invoke("check-for-updates"),
   onBreakInit: (cb) => {
     ipcRenderer.on("break-init", (_e, payload) => cb(payload));
   },

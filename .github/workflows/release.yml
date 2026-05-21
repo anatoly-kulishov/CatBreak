@@ -1,0 +1,43 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            args: --mac
+          - os: windows-latest
+            args: --win
+          - os: ubuntu-latest
+            args: --linux
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - run: npm ci
+      - run: npm run prepare
+      - name: Build and publish to GitHub Releases
+        run: npx electron-builder ${{ matrix.args }} --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload macOS install notes
+        if: matrix.os == 'macos-latest'
+        run: gh release upload "$GITHUB_REF_NAME" docs/en/MACOS_INSTALL.md --clobber
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

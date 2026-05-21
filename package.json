@@ -32,6 +32,9 @@
   "engines": {
     "node": ">=20"
   },
+  "dependencies": {
+    "electron-updater": "^6.8.3"
+  },
   "devDependencies": {
     "electron": "^35.0.0",
     "electron-builder": "^25.1.8",
@@ -100,6 +103,12 @@
         "Comment": "Break reminders for your eyes",
         "Categories": "Utility;"
       }
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "anatoly-kulishov",
+      "repo": "CatBreak",
+      "releaseType": "release"
     }
   }
 }

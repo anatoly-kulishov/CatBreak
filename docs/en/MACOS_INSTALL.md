@@ -10,8 +10,16 @@
 
 ## Download a release
 
+**DMG**
+
 1. Get `Cat Break-*-arm64.dmg` (or `*-x64.dmg` for Intel) from [Releases](https://github.com/anatoly-kulishov/CatBreak/releases), or build from source.
 2. Open the DMG and drag **Cat Break** to **Applications**.
+
+**ZIP**
+
+1. Get `Cat Break-*-arm64-mac.zip` from Releases.
+2. Unzip the archive (often into **Downloads**).
+3. Drag **Cat Break.app** to **Applications** — do not run it from the extracted folder.
 
 ## First launch (unsigned app)
 
@@ -26,7 +34,15 @@ xattr -cr "/Applications/Cat Break.app"
 open "/Applications/Cat Break.app"
 ```
 
-Run the command after dragging the app from the DMG into **Applications**.
+Run the `/Applications/...` command **after** moving the app to **Applications** (DMG or ZIP).
+
+If the app is still in **Downloads** and you have not moved it yet:
+
+```bash
+xattr -cr "$HOME/Downloads/Cat Break.app"
+```
+
+Use the real path if the unzip folder name differs. Then move the app to **Applications** and prefer the first command.
 
 **Option 3:** **System Settings** → **Privacy & Security** → **Open Anyway** (after a blocked launch attempt).
 

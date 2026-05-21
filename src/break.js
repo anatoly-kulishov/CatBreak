@@ -1,4 +1,6 @@
 const countdownEl = document.getElementById("countdown");
+const countdownClockEl = document.getElementById("countdown-clock");
+const eyebrowEl = document.getElementById("eyebrow");
 const hintEl = document.getElementById("hint");
 const exercisesEl = document.getElementById("exercises");
 const exercisesTitleEl = document.getElementById("exercises-title");
@@ -20,12 +22,22 @@ function formatClock(totalSeconds) {
 }
 
 function renderTimer() {
-  countdownEl.textContent = formatClock(secondsLeft);
+  const clock = formatClock(secondsLeft);
+  if (countdownClockEl) {
+    countdownClockEl.textContent = clock;
+  } else if (countdownEl) {
+    countdownEl.textContent = clock;
+  }
+  countdownEl?.classList.toggle("countdown--soon", secondsLeft > 0 && secondsLeft <= 10);
 }
 
 function applyBreakStrings(s) {
   strings = s || {};
   document.title = strings.title || "Break";
+  if (eyebrowEl) {
+    eyebrowEl.textContent = strings.eyebrow || "";
+    eyebrowEl.hidden = !strings.eyebrow;
+  }
   if (exercisesTitleEl) {
     exercisesTitleEl.textContent = strings.exercisesTitle || "";
   }
@@ -35,7 +47,13 @@ function applyBreakStrings(s) {
     if (el) el.textContent = strings[key] || "";
   });
   if (skipBtn) {
-    skipBtn.textContent = strings.skip || "";
+    const label = skipBtn.querySelector(".skip__label");
+    const text = strings.skip || "";
+    if (label) {
+      label.textContent = text;
+    } else {
+      skipBtn.textContent = text;
+    }
   }
 }
 

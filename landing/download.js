@@ -71,8 +71,8 @@ function applyPlatformUI() {
     el.hidden = hint !== hintKey || panelLang !== lang;
   });
 
-  const installHint = document.getElementById("install-hint");
-  if (installHint) installHint.hidden = false;
+  const faq = document.getElementById("faq");
+  if (faq) faq.hidden = false;
 }
 
 function isSkippedFilename(name) {
@@ -223,6 +223,102 @@ const LOADING_LABELS = {
   en: "Fetching release…",
   ru: "Загрузка релиза…",
 };
+
+const COPY_LABELS = {
+  en: { copy: "Copy", copied: "Copied", failed: "Copy failed" },
+  ru: { copy: "Скопировать", copied: "Скопировано", failed: "Не удалось" },
+};
+
+/** @type {Record<"en"|"ru", string[]>} */
+const FOOTER_QUIPS = {
+  en: [
+    "Rest those eyes · meow",
+    "The tray cat believes in you",
+    "Blink more, zoom less",
+    "Paws off the keyboard for a minute",
+    "Your eyes called — they want a break",
+    "Cat-approved break reminders",
+  ],
+  ru: [
+    "Берегите глазки · мур",
+    "Котик из трея верит в вас",
+    "Моргайте чаще, зумьте меньше",
+    "Лапки с клавиатуры — на минуту",
+    "Глаза просят перерыв",
+    "Перерывы с одобрения кота",
+  ],
+};
+
+function pickFooterQuip(lng) {
+  const list = FOOTER_QUIPS[lng];
+  if (!list?.length) return "";
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+function applyFooterQuip(lng) {
+  document.querySelectorAll("[data-footer-quip]").forEach((el) => {
+    const panel = el.closest("[data-lang-panel]");
+    if (!(panel instanceof HTMLElement)) return;
+    el.textContent = panel.getAttribute("data-lang-panel") === lng ? pickFooterQuip(lng) : "";
+  });
+}
+
+const MACOS_QUARANTINE_CMD = 'xattr -cr "/Applications/Cat Break.app"';
+
+function copyLabels() {
+  return COPY_LABELS[currentLang()] ?? COPY_LABELS.en;
+}
+
+function fallbackCopyText(text) {
+  const area = document.createElement("textarea");
+  area.value = text;
+  area.setAttribute("readonly", "");
+  area.style.position = "fixed";
+  area.style.left = "-9999px";
+  document.body.appendChild(area);
+  area.select();
+  const ok = document.execCommand("copy");
+  document.body.removeChild(area);
+  return ok;
+}
+
+async function copyCommandText(text) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+  if (!fallbackCopyText(text)) {
+    throw new Error("copy failed");
+  }
+}
+
+function setCopyButtonIdle(btn) {
+  const labels = copyLabels();
+  btn.textContent = labels.copy;
+  btn.classList.remove("copy-command__btn--done");
+  btn.disabled = false;
+}
+
+function initCopyCommands() {
+  document.querySelectorAll(".copy-command__btn[data-copy-text]").forEach((btn) => {
+    if (!(btn instanceof HTMLButtonElement)) return;
+    const text = btn.dataset.copyText || MACOS_QUARANTINE_CMD;
+    btn.dataset.copyText = text;
+
+    btn.addEventListener("click", async () => {
+      const labels = copyLabels();
+      try {
+        await copyCommandText(text);
+        btn.textContent = labels.copied;
+        btn.classList.add("copy-command__btn--done");
+        window.setTimeout(() => setCopyButtonIdle(btn), 2000);
+      } catch {
+        btn.textContent = labels.failed;
+        window.setTimeout(() => setCopyButtonIdle(btn), 2200);
+      }
+    });
+  });
+}
 
 function syncLoadingLabel() {
   const label = document.getElementById("download-loading-label");
@@ -416,11 +512,34 @@ function applyLang(lng) {
   });
 
   syncLoadingLabel();
+  document.querySelectorAll(".copy-command__btn[data-copy-text]").forEach((btn) => {
+    if (btn instanceof HTMLButtonElement && !btn.classList.contains("copy-command__btn--done")) {
+      btn.textContent = COPY_LABELS[lng]?.copy ?? COPY_LABELS.en.copy;
+    }
+  });
+
+  applyFooterQuip(lng);
+}
+
+function initCatBlink() {
+  const icon = document.querySelector(".hero__icon");
+  if (!(icon instanceof HTMLElement)) return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  const runBlink = () => {
+    icon.classList.add("hero__icon--blink");
+    window.setTimeout(() => icon.classList.remove("hero__icon--blink"), 240);
+  };
+
+  runBlink();
+  window.setInterval(runBlink, 4200 + Math.random() * 2800);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
   initLangSwitch();
   initPlatformPickers();
+  initCopyCommands();
+  initCatBlink();
   injectLatestRelease();
 
   document.querySelectorAll("[data-releases-link]").forEach((a) => {

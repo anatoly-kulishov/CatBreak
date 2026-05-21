@@ -7,6 +7,7 @@ const {
   screen,
   powerMonitor,
   ipcMain,
+  shell,
 } = require("electron");
 const path = require("path");
 const fs = require("fs");
@@ -22,6 +23,21 @@ const {
 const { createTranslator, clearLocaleCache } = require("./lib/i18n");
 const { applyLaunchAtLogin, canUseLoginItemSettings } = require("./lib/autostart");
 const { showNotification } = require("./lib/notifications");
+const {
+  compareVersions,
+  fetchLatestRelease,
+  RELEASES_LATEST_URL,
+} = require("./lib/releases");
+const {
+  isAutoUpdaterEnabled,
+  configureAutoUpdater,
+  onAutoUpdateStateChange,
+  getAutoUpdateState,
+  hasAutoUpdateReady,
+  checkAutoUpdate,
+  downloadAutoUpdate,
+  quitAndInstallUpdate,
+} = require("./lib/updater");
 
 const SETTINGS_PATH = path.join(app.getPath("userData"), "settings.json");
 const RELEASES_URL = pkg.repository?.url
@@ -38,7 +54,17 @@ const DEFAULT_SETTINGS = {
   notifyBeforeBreak: true,
   soundOnBreakEnd: true,
   launchAtLogin: false,
+  checkForUpdates: true,
+  updateDismissedVersion: null,
 };
+
+const UPDATE_CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
+const UPDATE_STARTUP_DELAY_MS = 8 * 1000;
+
+/** @type {null | { version: string; tag?: string; name?: string; source: 'auto' | 'manual'; status?: 'available' | 'downloading' | 'downloaded'; percent?: number; downloadUrl?: string; downloadName?: string | null; htmlUrl?: string }} */
+let updateInfo = null;
+let updateCheckTimer = null;
+let updateCheckInFlight = false;
 
 let tray = null;
 let settingsWindow = null;
@@ -117,6 +143,222 @@ function maybeNotifyBeforeBreak() {
   preBreakNotified = true;
 }
 
+function buildUpdateTrayItems(tr) {
+  const items = [
+    {
+      label: tr.t("tray.checkForUpdates"),
+      click: () => {
+        checkForUpdates({ notify: true, force: true });
+      },
+    },
+  ];
+
+  if (
+    updateInfo?.version &&
+    settings.updateDismissedVersion !== updateInfo.version
+  ) {
+    const isReady = updateInfo.status === "downloaded";
+    items.push({
+      label: isReady
+        ? tr.t("tray.updateInstall", { version: updateInfo.version })
+        : tr.t("tray.updateAvailable", { version: updateInfo.version }),
+      click: () => handleUpdateAction(),
+    });
+  }
+
+  return items;
+}
+
+function syncUpdateFromAutoState() {
+  const auto = getAutoUpdateState();
+  if (!hasAutoUpdateReady() || !auto.info?.version) {
+    return false;
+  }
+
+  updateInfo = {
+    version: auto.info.version,
+    name: auto.info.releaseName || auto.info.version,
+    source: "auto",
+    status:
+      auto.status === "downloading"
+        ? "downloading"
+        : auto.status === "downloaded"
+          ? "downloaded"
+          : "available",
+    percent:
+      auto.progress?.percent != null
+        ? Math.round(auto.progress.percent)
+        : undefined,
+    htmlUrl: RELEASES_LATEST_URL,
+  };
+  return true;
+}
+
+function applyManualUpdateInfo(release) {
+  const latest = release.version;
+  if (!latest || compareVersions(pkg.version, latest) >= 0) {
+    updateInfo = null;
+    return false;
+  }
+
+  updateInfo = {
+    version: latest,
+    tag: release.tag,
+    name: release.name,
+    source: "manual",
+    status: "available",
+    downloadUrl: release.downloadUrl,
+    downloadName: release.downloadName,
+    htmlUrl: release.htmlUrl,
+  };
+  return true;
+}
+
+function maybeNotifyUpdateAvailable(version, notify) {
+  if (!notify || settings.updateDismissedVersion === version) return;
+  const focused = BrowserWindow.getFocusedWindow();
+  if (focused === settingsWindow) return;
+
+  const tr = getTranslator();
+  showNotification({
+    title: tr.t("settings.updateNotifyTitle"),
+    body: tr.t("settings.updateNotifyBody", { version }),
+    silent: false,
+  });
+}
+
+async function checkManualUpdates({ notify = false } = {}) {
+  const release = await fetchLatestRelease();
+  const found = applyManualUpdateInfo(release);
+  if (found && updateInfo?.version) {
+    maybeNotifyUpdateAvailable(updateInfo.version, notify);
+  }
+  return found;
+}
+
+async function checkAutoUpdates({ notify = false } = {}) {
+  if (!isAutoUpdaterEnabled()) return false;
+
+  const result = await checkAutoUpdate();
+  if (result.available && syncUpdateFromAutoState() && updateInfo?.version) {
+    maybeNotifyUpdateAvailable(updateInfo.version, notify);
+    return true;
+  }
+  return false;
+}
+
+function openManualUpdateDownload() {
+  const url = updateInfo?.downloadUrl || RELEASES_LATEST_URL;
+  shell.openExternal(url).catch((err) => {
+    console.error("open update url failed", err);
+  });
+}
+
+async function handleUpdateAction() {
+  if (!updateInfo?.version) return;
+
+  if (updateInfo.source === "auto") {
+    if (updateInfo.status === "downloaded") {
+      quitAndInstallUpdate();
+      return;
+    }
+    if (updateInfo.status === "available") {
+      try {
+        await downloadAutoUpdate();
+      } catch (err) {
+        console.error("download update failed", err);
+        openManualUpdateDownload();
+      }
+      return;
+    }
+    return;
+  }
+
+  openManualUpdateDownload();
+}
+
+function getUpdatePayload() {
+  if (!updateInfo?.version) return null;
+  return {
+    version: updateInfo.version,
+    tag: updateInfo.tag,
+    name: updateInfo.name,
+    source: updateInfo.source,
+    status: updateInfo.status,
+    percent: updateInfo.percent,
+    downloadUrl: updateInfo.downloadUrl,
+    downloadName: updateInfo.downloadName,
+    htmlUrl: updateInfo.htmlUrl,
+    autoUpdaterEnabled: isAutoUpdaterEnabled(),
+    dismissed: settings.updateDismissedVersion === updateInfo.version,
+  };
+}
+
+async function checkForUpdates({ notify = false, force = false } = {}) {
+  if (!settings.checkForUpdates && !force) return;
+  if (updateCheckInFlight) return;
+
+  const now = Date.now();
+  if (
+    !force &&
+    settings.updateLastCheckAt &&
+    now - settings.updateLastCheckAt < UPDATE_CHECK_INTERVAL_MS
+  ) {
+    return;
+  }
+
+  updateCheckInFlight = true;
+  try {
+    let found = false;
+    if (isAutoUpdaterEnabled()) {
+      try {
+        found = await checkAutoUpdates({ notify });
+      } catch (err) {
+        console.error("auto update check failed", err);
+      }
+    }
+
+    if (!found) {
+      found = await checkManualUpdates({ notify });
+    }
+
+    if (!found) {
+      updateInfo = null;
+    }
+
+    settings.updateLastCheckAt = now;
+    saveSettings();
+    notifySettingsUi();
+    refreshTray();
+  } catch (err) {
+    console.error("update check failed", err);
+  } finally {
+    updateCheckInFlight = false;
+  }
+}
+
+function onAutoUpdaterStateChanged() {
+  if (syncUpdateFromAutoState()) {
+    notifySettingsUi();
+    refreshTray();
+  }
+}
+
+function scheduleUpdateChecks() {
+  if (updateCheckTimer) {
+    clearInterval(updateCheckTimer);
+    updateCheckTimer = null;
+  }
+
+  setTimeout(() => {
+    checkForUpdates({ notify: true });
+  }, UPDATE_STARTUP_DELAY_MS);
+
+  updateCheckTimer = setInterval(() => {
+    checkForUpdates({ notify: true });
+  }, UPDATE_CHECK_INTERVAL_MS);
+}
+
 function buildTrayMenu() {
   const tr = getTranslator();
   const clock = formatClock(onBreak ? breakSecondsLeft : workSecondsLeft);
@@ -150,6 +392,8 @@ function buildTrayMenu() {
         enabled: false,
         click: () => {},
       },
+      { type: "separator" },
+      ...buildUpdateTrayItems(tr),
       { type: "separator" },
       {
         label: tr.t("tray.settings"),
@@ -187,6 +431,8 @@ function buildTrayMenu() {
       label: tr.t("tray.resetWork"),
       click: () => resetWorkTimer(),
     },
+    { type: "separator" },
+    ...buildUpdateTrayItems(tr),
     { type: "separator" },
     {
       label: tr.t("tray.settings"),
@@ -396,7 +642,7 @@ function openSettings() {
 
   settingsWindow = new BrowserWindow({
     width: 400,
-    height: 740,
+    height: 820,
     resizable: false,
     show: false,
     backgroundColor: "#1a1a1a",
@@ -433,6 +679,7 @@ function notifySettingsUi() {
       appVersion: pkg.version,
       releasesUrl: RELEASES_URL,
       launchAtLoginSupported: canUseLoginItemSettings(),
+      update: getUpdatePayload(),
     });
   }
 }
@@ -464,6 +711,8 @@ app.on("second-instance", () => {
 app.whenReady().then(() => {
   setAppUserModelId();
   loadSettings();
+  configureAutoUpdater();
+  onAutoUpdateStateChange(onAutoUpdaterStateChanged);
   applyLaunchAtLogin(settings.launchAtLogin);
   createTray();
   startTick();
@@ -471,6 +720,8 @@ app.whenReady().then(() => {
   if (isFirstRun) {
     openSettings();
   }
+
+  scheduleUpdateChecks();
 });
 
 app.on("window-all-closed", (e) => {
@@ -480,6 +731,10 @@ app.on("window-all-closed", (e) => {
 app.on("before-quit", () => {
   stopTick();
   closeBreakWindows();
+  if (updateCheckTimer) {
+    clearInterval(updateCheckTimer);
+    updateCheckTimer = null;
+  }
 });
 
 ipcMain.handle("get-settings", () => {
@@ -493,7 +748,41 @@ ipcMain.handle("get-settings", () => {
     appVersion: pkg.version,
     releasesUrl: RELEASES_URL,
     launchAtLoginSupported: canUseLoginItemSettings(),
+    update: getUpdatePayload(),
   };
+});
+
+ipcMain.handle("open-update-download", async () => {
+  await handleUpdateAction();
+  return true;
+});
+
+ipcMain.handle("download-update", async () => {
+  await handleUpdateAction();
+  return getUpdatePayload();
+});
+
+ipcMain.handle("install-update", () => {
+  if (updateInfo?.source === "auto" && updateInfo.status === "downloaded") {
+    quitAndInstallUpdate();
+    return true;
+  }
+  return false;
+});
+
+ipcMain.handle("dismiss-update", () => {
+  if (updateInfo?.version) {
+    settings.updateDismissedVersion = updateInfo.version;
+    saveSettings();
+    notifySettingsUi();
+    refreshTray();
+  }
+  return true;
+});
+
+ipcMain.handle("check-for-updates", async () => {
+  await checkForUpdates({ notify: false, force: true });
+  return getUpdatePayload();
 });
 
 ipcMain.handle("save-settings", (_e, next) => {
@@ -508,8 +797,15 @@ ipcMain.handle("save-settings", (_e, next) => {
   }
 
   if (!onBreak) resetWorkTimer();
-  refreshTray();
-  notifySettingsUi();
+
+  if (settings.checkForUpdates) {
+    checkForUpdates({ notify: false, force: true });
+  } else {
+    updateInfo = null;
+    refreshTray();
+    notifySettingsUi();
+  }
+
   return true;
 });
 

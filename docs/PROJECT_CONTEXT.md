@@ -253,7 +253,7 @@ CI (`ci.yml`): `npm ci`, `prepare`, `node --check` на main.js, lib/*, preload,
 
 ## 13. Известные ограничения
 
-- Нет auto-update (только Releases link в Settings)
+- **Обновления:** этап 1 — GitHub API + ручная загрузка (`lib/releases.js`); этап 2 — `electron-updater` в упакованной сборке (`lib/updater.js`), fallback на API если нет `latest-*.yml` на релизе. CI: `.github/workflows/release.yml` публикует артефакты и yml по тегу `v*`. macOS auto-install требует подпись Apple; без подписи — скачивание в приложении + установка как на сайте.
 - Нет подписи бинарников
 - Settings/Break UI — **legacy** палитра (orange CTA); лендинг — новая cyan DS (см. DESIGN_SYSTEM)
 - `landing/` и docs могут быть в `develop` раньше, чем в `main`

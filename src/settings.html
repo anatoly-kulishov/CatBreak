@@ -11,6 +11,22 @@
     <link rel="stylesheet" href="settings.css" />
   </head>
   <body>
+    <div id="update-banner" class="update-banner" hidden>
+      <p id="update-banner-title" class="update-banner__title"></p>
+      <p id="update-banner-hint" class="update-banner__hint"></p>
+      <p id="update-banner-asset" class="update-banner__asset" hidden></p>
+      <div id="update-progress-wrap" class="update-banner__progress" hidden>
+        <div class="update-banner__progress-track">
+          <div id="update-progress-bar" class="update-banner__progress-bar"></div>
+        </div>
+        <span id="update-progress-label" class="update-banner__progress-label"></span>
+      </div>
+      <div class="update-banner__actions">
+        <button type="button" id="update-download" class="update-banner__primary"></button>
+        <button type="button" id="update-later" class="button-secondary" data-i18n="settings.updateLater"></button>
+      </div>
+    </div>
+
     <header class="settings-header">
       <h1>Cat Break</h1>
       <p class="sub" data-i18n="settings.sub"></p>
@@ -18,6 +34,10 @@
 
     <section class="settings-section" aria-labelledby="sec-general">
       <h2 id="sec-general" class="settings-section__title" data-i18n="settings.sectionGeneral"></h2>
+      <label class="row">
+        <input id="checkForUpdates" type="checkbox" />
+        <span data-i18n="settings.checkForUpdates"></span>
+      </label>
       <label class="field">
         <span class="field__label" data-i18n="settings.language"></span>
         <select id="locale">

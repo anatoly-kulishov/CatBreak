@@ -5,6 +5,8 @@
   },
   "tray": {
     "tooltip": "Cat Break",
+    "tooltipWork": "Cat Break — almost break time",
+    "tooltipBreak": "Cat Break — rest your eyes",
     "breakStatus": "Break: {{clock}}",
     "workStatus": "Break in: {{clock}}",
     "breakPrefix": "Break",
@@ -15,15 +17,18 @@
     "postpone10": "Postpone 10 minutes",
     "endBreak": "End break (all screens)",
     "settings": "Settings…",
+    "checkForUpdates": "Check for updates…",
+    "updateAvailable": "Download update {{version}}…",
+    "updateInstall": "Install update {{version}}…",
     "resetWork": "Restart work timer",
     "quit": "Quit"
   },
   "notify": {
     "title": "Cat Break",
-    "body": "Break in 1 minute — get ready to rest your eyes"
+    "body": "Break in one minute — your tray cat is getting ready"
   },
   "settings": {
-    "sub": "Eye break reminders. Screen recording is not used.",
+    "sub": "Eye breaks with a tray cat. Screen recording is not used.",
     "sectionGeneral": "General",
     "sectionTiming": "Timing",
     "sectionBehavior": "Break behavior",
@@ -50,15 +55,37 @@
     "localeEn": "English",
     "save": "Save",
     "saved": "Saved",
+    "savedPurrs": [
+      "Saved · meow",
+      "Saved — the cat approves",
+      "Settings stored · purr",
+      "The tray cat is pleased",
+      "Meow! All set."
+    ],
     "version": "Version {{version}}",
     "releases": "Releases",
+    "checkForUpdates": "Check for updates automatically",
+    "updateBannerTitle": "Update available: {{version}}",
+    "updateHintManual": "Download the build for your system. Install it over the current app (unsigned builds - same steps as on the website).",
+    "updateHintAuto": "Download inside the app, then restart to finish. On macOS, auto-install needs a signed build; otherwise use the downloaded file from Releases.",
+    "updateHintDownloading": "Downloading update in the background…",
+    "updateHintReady": "Update downloaded. Restart the app to install.",
+    "updateDownload": "Open download page",
+    "updateDownloadInApp": "Download in app",
+    "updateDownloading": "Downloading…",
+    "updateInstall": "Install and restart",
+    "updateProgress": "{{percent}}%",
+    "updateLater": "Remind me later",
+    "updateAsset": "File: {{name}}",
+    "updateNotifyTitle": "Cat Break update",
+    "updateNotifyBody": "Version {{version}} is ready to download.",
     "bootError": "Failed to load UI. Please restart the app.",
     "loadError": "Could not load settings.",
     "saveError": "Could not save settings."
   },
   "break": {
     "title": "Break",
-    "eyebrow": "Time for your eyes and back",
+    "eyebrow": "Your cat break — give your eyes a rest",
     "hintDemo": "Demo. Closes all screens at once.",
     "hintSkip": "Ends the break on all screens.",
     "hintDemoStrict": "Demo break",
@@ -68,6 +95,6 @@
     "exercise2": "Blink slowly 10 times.",
     "exercise3": "Roll your eyes in circles.",
     "exercise4": "Stand up and stretch your neck.",
-    "skip": "Off you go, cat!"
+    "skip": "Let the cat nap — skip"
   }
 }
