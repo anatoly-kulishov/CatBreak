@@ -99,43 +99,43 @@ function labelMac(name) {
 
   if (n.includes("universal"))
     return {
-      en: `macOS · Universal${fmt.en}`,
-      ru: `macOS · Universal${fmt.ru}`,
+      en: `Universal${fmt.en}`,
+      ru: `Universal${fmt.ru}`,
     };
   if (n.includes("arm64") || n.includes("aarch64"))
     return {
-      en: `macOS · Apple Silicon${fmt.en}`,
-      ru: `macOS · Apple Silicon${fmt.ru}`,
+      en: `Apple Silicon${fmt.en}`,
+      ru: `Apple Silicon${fmt.ru}`,
     };
   if (n.includes("x64") || n.includes("x86_64") || n.includes("intel"))
     return {
-      en: `macOS · Intel (x64)${fmt.en}`,
-      ru: `macOS · Intel (x64)${fmt.ru}`,
+      en: `Intel (x64)${fmt.en}`,
+      ru: `Intel (x64)${fmt.ru}`,
     };
   const ext = dmg ? ".dmg" : zip ? ".zip" : "";
-  return { en: `macOS · Disk image ${ext}`, ru: `macOS · Образ ${ext}` };
+  return { en: `Disk image ${ext}`, ru: `Образ ${ext}` };
 }
 
 /** @param {string} name */
 function labelWin(name) {
   const n = name.toLowerCase();
   if (n.includes("portable"))
-    return { en: "Windows · Portable (x64)", ru: "Windows · Portable (x64)" };
+    return { en: "Portable (x64)", ru: "Portable (x64)" };
   if (n.includes("arm64") || n.includes("aarch64"))
-    return { en: "Windows · Installer (arm64)", ru: "Windows · Установщик (arm64)" };
+    return { en: "Installer (arm64)", ru: "Установщик (arm64)" };
   if (n.includes("setup"))
     return {
-      en: "Windows · Installer (NSIS, x64 + arm64)",
-      ru: "Windows · Установщик (NSIS, x64 + arm64)",
+      en: "Installer (NSIS, x64 + arm64)",
+      ru: "Установщик (NSIS, x64 + arm64)",
     };
   if (n.includes("x64") || n.includes("x86_64"))
-    return { en: "Windows · Installer (x64)", ru: "Windows · Установщик (x64)" };
+    return { en: "Installer (x64)", ru: "Установщик (x64)" };
   if (/\.exe$/i.test(name))
     return {
-      en: "Windows · Portable (x64, no install)",
-      ru: "Windows · Portable (x64, без установки)",
+      en: "Portable (x64, no install)",
+      ru: "Portable (x64, без установки)",
     };
-  return { en: `Windows · ${name}`, ru: `Windows · ${name}` };
+  return { en: name, ru: name };
 }
 
 /** @param {string} name */
@@ -143,17 +143,17 @@ function labelLinux(name) {
   const n = name.toLowerCase();
   if (/\.appimage$/i.test(name)) {
     if (n.includes("arm64") || n.includes("aarch64"))
-      return { en: "Linux · AppImage (arm64)", ru: "Linux · AppImage (arm64)" };
-    return { en: "Linux · AppImage (x86_64)", ru: "Linux · AppImage (x86_64)" };
+      return { en: "AppImage (arm64)", ru: "AppImage (arm64)" };
+    return { en: "AppImage (x64)", ru: "AppImage (x64)" };
   }
   if (/\.deb$/i.test(name)) {
     if (n.includes("arm64") || n.includes("aarch64"))
-      return { en: "Linux · deb (arm64)", ru: "Linux · deb (arm64)" };
+      return { en: "deb (arm64)", ru: "deb (arm64)" };
     if (n.includes("amd64") || n.includes("x64") || n.includes("x86_64"))
-      return { en: "Linux · deb (amd64)", ru: "Linux · deb (amd64)" };
-    return { en: "Linux · deb", ru: "Linux · deb" };
+      return { en: "deb (x64)", ru: "deb (x64)" };
+    return { en: "deb", ru: "deb" };
   }
-  return { en: `Linux · ${name}`, ru: `Linux · ${name}` };
+  return { en: name, ru: name };
 }
 
 /**
@@ -213,6 +213,67 @@ function sortLinux(list) {
     return s;
   };
   return [...list].sort((a, b) => score(a.name) - score(b.name) || a.name.localeCompare(b.name));
+}
+
+/** Prefer canonical Cat-Break-* names over Cat.Break.* duplicates from parallel CI uploads. */
+function assetNameScore(name) {
+  let score = 0;
+  if (/^Cat-Break-/i.test(name)) score += 20;
+  if (/^cat-break-desktop_/i.test(name)) score += 18;
+  if (/Cat\.Break/i.test(name)) score -= 10;
+  return score;
+}
+
+/** @param {GHAsset} a @param {GHAsset} b */
+function preferAsset(a, b) {
+  const diff = assetNameScore(a.name) - assetNameScore(b.name);
+  if (diff !== 0) return diff > 0 ? a : b;
+  return a.name.length <= b.name.length ? a : b;
+}
+
+/**
+ * @param {GHAsset[]} list
+ * @param {(name: string) => string} keyFn
+ */
+function dedupeAssets(list, keyFn) {
+  const map = new Map();
+  for (const asset of list) {
+    const key = keyFn(asset.name);
+    const prev = map.get(key);
+    map.set(key, prev ? preferAsset(asset, prev) : asset);
+  }
+  return [...map.values()];
+}
+
+/** @param {string} name */
+function macAssetKey(name) {
+  const n = name.toLowerCase();
+  const fmt = /\.dmg$/i.test(name) ? "dmg" : /\.zip$/i.test(name) ? "zip" : "other";
+  if (fmt === "other") return `other:${name}`;
+  let arch = "generic";
+  if (n.includes("universal")) arch = "universal";
+  else if (n.includes("arm64") || n.includes("aarch64")) arch = "arm64";
+  else if (n.includes("x64") || n.includes("x86_64") || n.includes("intel")) arch = "x64";
+  return `${arch}:${fmt}`;
+}
+
+/** @param {string} name */
+function winAssetKey(name) {
+  const n = name.toLowerCase();
+  if (n.includes("setup")) {
+    return n.includes("arm64") || n.includes("aarch64") ? "setup:arm64" : "setup:nsis";
+  }
+  return "portable:x64";
+}
+
+/** @param {string} name */
+function linuxAssetKey(name) {
+  const n = name.toLowerCase();
+  const fmt = /\.appimage$/i.test(name) ? "appimage" : /\.deb$/i.test(name) ? "deb" : "other";
+  if (fmt === "other") return `other:${name}`;
+  let arch = "x64";
+  if (n.includes("arm64") || n.includes("aarch64")) arch = "arm64";
+  return `${arch}:${fmt}`;
 }
 
 function currentLang() {
@@ -386,9 +447,11 @@ function renderPlatformMenus() {
     linux: document.querySelector('.platform-picker[data-platform="linux"] .platform-picker__menu'),
   };
 
-  if (menus.mac) fillMenu(menus.mac, sortMac(bins.mac), labelMac);
-  if (menus.win) fillMenu(menus.win, sortWin(bins.win), labelWin);
-  if (menus.linux) fillMenu(menus.linux, sortLinux(bins.linux), labelLinux);
+  if (menus.mac) fillMenu(menus.mac, sortMac(dedupeAssets(bins.mac, macAssetKey)), labelMac);
+  if (menus.win) fillMenu(menus.win, sortWin(dedupeAssets(bins.win, winAssetKey)), labelWin);
+  if (menus.linux) {
+    fillMenu(menus.linux, sortLinux(dedupeAssets(bins.linux, linuxAssetKey)), labelLinux);
+  }
 
   const empty = bins.mac.length + bins.win.length + bins.linux.length === 0;
   const note = document.getElementById("download-note");
@@ -521,25 +584,24 @@ function applyLang(lng) {
   applyFooterQuip(lng);
 }
 
-function initCatBlink() {
-  const icon = document.querySelector(".hero__icon");
-  if (!(icon instanceof HTMLElement)) return;
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-  const runBlink = () => {
-    icon.classList.add("hero__icon--blink");
-    window.setTimeout(() => icon.classList.remove("hero__icon--blink"), 240);
-  };
-
-  runBlink();
-  window.setInterval(runBlink, 4200 + Math.random() * 2800);
+function initFaqAccordion() {
+  document.querySelectorAll(".faq-list").forEach((list) => {
+    list.querySelectorAll(".faq-item").forEach((item) => {
+      item.addEventListener("toggle", () => {
+        if (!item.open) return;
+        list.querySelectorAll(".faq-item").forEach((other) => {
+          if (other !== item) other.open = false;
+        });
+      });
+    });
+  });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
   initLangSwitch();
   initPlatformPickers();
   initCopyCommands();
-  initCatBlink();
+  initFaqAccordion();
   injectLatestRelease();
 
   document.querySelectorAll("[data-releases-link]").forEach((a) => {
