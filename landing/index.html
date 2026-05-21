@@ -22,15 +22,17 @@
 
       <section class="hero">
         <div class="hero__icon-wrap">
-          <img
-            id="app-icon"
-            class="hero__icon"
-            src="app-icon.png"
-            width="256"
-            height="256"
-            alt=""
-            decoding="async"
-          />
+          <span class="hero__icon-shell" aria-hidden="true">
+            <img
+              id="app-icon"
+              class="hero__icon"
+              src="app-icon.png"
+              width="256"
+              height="256"
+              alt=""
+              decoding="async"
+            />
+          </span>
         </div>
         <div>
           <div data-lang-panel="en">
@@ -159,6 +161,37 @@
               </p>
             </details>
             <details class="faq-item">
+              <summary>“Damaged” app or quarantine (Terminal)</summary>
+              <p class="faq-callout">
+                <strong>Damaged</strong> or <strong>can’t be opened</strong>? Don’t click Move to Trash. With
+                <strong>DMG</strong>, drag <strong>Cat Break</strong> to <strong>Applications</strong> first, then run the command
+                below.
+              </p>
+              <p class="copy-command__label">In <strong>Applications</strong> (typical for DMG; ZIP after moving):</p>
+              <div class="copy-command copy-command--primary">
+                <code class="copy-command__code">xattr -cr "/Applications/Cat Break.app"</code>
+                <button
+                  type="button"
+                  class="copy-command__btn"
+                  data-copy-text='xattr -cr "/Applications/Cat Break.app"'
+                >
+                  Copy
+                </button>
+              </div>
+              <p class="copy-command__label copy-command__label--alt">Still in <strong>Downloads</strong> (ZIP, before moving):</p>
+              <div class="copy-command">
+                <code class="copy-command__code">xattr -cr "$HOME/Downloads/Cat Break.app"</code>
+                <button
+                  type="button"
+                  class="copy-command__btn"
+                  data-copy-text='xattr -cr "$HOME/Downloads/Cat Break.app"'
+                >
+                  Copy
+                </button>
+              </div>
+              <p class="faq-steps__note">Adjust the Downloads path if the unzip folder name differs.</p>
+            </details>
+            <details class="faq-item">
               <summary>Why isn’t the app signed by Apple?</summary>
               <p>
                 Cat Break is distributed without an Apple Developer ID signature. macOS Gatekeeper may block the first launch —
@@ -175,36 +208,6 @@
                 </li>
               </ol>
               <p class="faq-steps__note">Requires macOS 12+. Pick <strong>arm64</strong> on Apple Silicon, <strong>x64</strong> on Intel.</p>
-            </details>
-            <details class="faq-item">
-              <summary>“Damaged” app or quarantine (Terminal)</summary>
-              <p class="faq-callout">
-                <strong>Damaged</strong> while <strong>Cat Break.app</strong> is still in <strong>Downloads</strong>?
-                Do not click Move to Trash — run the first command below.
-              </p>
-              <p class="copy-command__label">App in <strong>Downloads</strong> (typical after ZIP):</p>
-              <div class="copy-command copy-command--primary">
-                <code class="copy-command__code">xattr -cr "$HOME/Downloads/Cat Break.app"</code>
-                <button
-                  type="button"
-                  class="copy-command__btn"
-                  data-copy-text='xattr -cr "$HOME/Downloads/Cat Break.app"'
-                >
-                  Copy
-                </button>
-              </div>
-              <p class="copy-command__label copy-command__label--alt">After moving to <strong>Applications</strong>:</p>
-              <div class="copy-command">
-                <code class="copy-command__code">xattr -cr "/Applications/Cat Break.app"</code>
-                <button
-                  type="button"
-                  class="copy-command__btn"
-                  data-copy-text='xattr -cr "/Applications/Cat Break.app"'
-                >
-                  Copy
-                </button>
-              </div>
-              <p class="faq-steps__note">Adjust the path if the unzip folder name differs.</p>
             </details>
             <details class="faq-item">
               <summary>Open without Terminal</summary>
@@ -230,6 +233,37 @@
               </p>
             </details>
             <details class="faq-item">
+              <summary>«Повреждено» и quarantine (Терминал)</summary>
+              <p class="faq-callout">
+                «<strong>Повреждено</strong>» или «<strong>не удаётся открыть</strong>»? Не нажимайте «Переместить в Корзину».
+                С <strong>DMG</strong> сначала перетащите <strong>Cat Break</strong> в <strong>Программы</strong>, затем выполните
+                команду ниже.
+              </p>
+              <p class="copy-command__label">В <strong>Программах</strong> (обычно после DMG; ZIP — после переноса):</p>
+              <div class="copy-command copy-command--primary">
+                <code class="copy-command__code">xattr -cr "/Applications/Cat Break.app"</code>
+                <button
+                  type="button"
+                  class="copy-command__btn"
+                  data-copy-text='xattr -cr "/Applications/Cat Break.app"'
+                >
+                  Скопировать
+                </button>
+              </div>
+              <p class="copy-command__label copy-command__label--alt">В <strong>Загрузках</strong> (ZIP, до переноса):</p>
+              <div class="copy-command">
+                <code class="copy-command__code">xattr -cr "$HOME/Downloads/Cat Break.app"</code>
+                <button
+                  type="button"
+                  class="copy-command__btn"
+                  data-copy-text='xattr -cr "$HOME/Downloads/Cat Break.app"'
+                >
+                  Скопировать
+                </button>
+              </div>
+              <p class="faq-steps__note">Для ZIP подставьте свой путь в Загрузках, если папка называется иначе.</p>
+            </details>
+            <details class="faq-item">
               <summary>Почему нет подписи Apple?</summary>
               <p>
                 Сборка без Apple Developer ID. Gatekeeper может заблокировать первый запуск — это ожидаемо, а не «битый» файл.
@@ -245,36 +279,6 @@
                 </li>
               </ol>
               <p class="faq-steps__note">Нужен macOS 12+. На Apple Silicon — <strong>arm64</strong>, на Intel — <strong>x64</strong>.</p>
-            </details>
-            <details class="faq-item">
-              <summary>«Повреждено» и quarantine (Терминал)</summary>
-              <p class="faq-callout">
-                Окно «<strong>повреждено</strong>» и приложение в <strong>Загрузках</strong>?
-                Не нажимайте «Переместить в Корзину» — выполните первую команду.
-              </p>
-              <p class="copy-command__label">Приложение в <strong>Загрузках</strong> (типично после ZIP):</p>
-              <div class="copy-command copy-command--primary">
-                <code class="copy-command__code">xattr -cr "$HOME/Downloads/Cat Break.app"</code>
-                <button
-                  type="button"
-                  class="copy-command__btn"
-                  data-copy-text='xattr -cr "$HOME/Downloads/Cat Break.app"'
-                >
-                  Скопировать
-                </button>
-              </div>
-              <p class="copy-command__label copy-command__label--alt">После переноса в <strong>Программы</strong>:</p>
-              <div class="copy-command">
-                <code class="copy-command__code">xattr -cr "/Applications/Cat Break.app"</code>
-                <button
-                  type="button"
-                  class="copy-command__btn"
-                  data-copy-text='xattr -cr "/Applications/Cat Break.app"'
-                >
-                  Скопировать
-                </button>
-              </div>
-              <p class="faq-steps__note">Подставьте свой путь, если папка после распаковки называется иначе.</p>
             </details>
             <details class="faq-item">
               <summary>Открыть без Терминала</summary>

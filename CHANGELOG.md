@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.5] - 2026-05-21
+
+### Changed
+
+- Landing: FAQ click targets, macOS quarantine notes (DMG then Applications), hero idle-only motion
+- Landing: dedupe duplicate CI release assets in platform download menus; shorter menu labels
+- Paw decor: three toes and pad (break overlay and landing)
+
 ## [1.0.4] - 2026-05-21
 
 ### Added
