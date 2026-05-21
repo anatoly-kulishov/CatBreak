@@ -122,6 +122,15 @@ function readForm() {
   return next;
 }
 
+document.querySelectorAll("[data-preset-work][data-preset-break]").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const workMinutes = document.getElementById("workMinutes");
+    const breakMinutes = document.getElementById("breakMinutes");
+    if (workMinutes) workMinutes.value = btn.dataset.presetWork;
+    if (breakMinutes) breakMinutes.value = btn.dataset.presetBreak;
+  });
+});
+
 document.getElementById("save")?.addEventListener("click", async () => {
   try {
     await window.catBreak.saveSettings(readForm());
@@ -133,6 +142,16 @@ document.getElementById("save")?.addEventListener("click", async () => {
         status.classList.remove("status--error");
       }
     }, 2200);
+  } catch (err) {
+    console.error(err);
+    showBootError(t("settings.saveError"));
+  }
+});
+
+document.getElementById("demoBreak")?.addEventListener("click", async () => {
+  try {
+    await window.catBreak.startDemoBreak();
+    setStatus(t("settings.demoStarted"), "success");
   } catch (err) {
     console.error(err);
     showBootError(t("settings.saveError"));

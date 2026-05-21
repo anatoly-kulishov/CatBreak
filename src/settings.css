@@ -145,6 +145,30 @@ label.row--spaced {
   margin-bottom: 0.35rem;
 }
 
+.field-hint--preset {
+  margin-bottom: 0.8rem;
+}
+
+.preset-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin-bottom: 0.25rem;
+}
+
+.preset-button {
+  padding: 0.48rem 0.4rem;
+  background: rgba(110, 231, 255, 0.1);
+  color: var(--accent);
+  border: 1px solid rgba(110, 231, 255, 0.2);
+  box-shadow: none;
+}
+
+.preset-button:hover {
+  background: rgba(110, 231, 255, 0.16);
+  filter: none;
+}
+
 .actions {
   display: flex;
   flex-direction: column;
@@ -171,6 +195,18 @@ button:focus-visible {
 
 button:hover {
   filter: brightness(1.06);
+}
+
+.button-secondary {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+
+.button-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  filter: none;
 }
 
 .status {

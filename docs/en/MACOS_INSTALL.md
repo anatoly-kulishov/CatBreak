@@ -19,12 +19,14 @@ The app is **not** signed with an Apple Developer ID. macOS may block the first 
 
 **Option 1:** Right-click `Cat Break.app` → **Open** → **Open** in the dialog.
 
-**Option 2:** Terminal:
+If macOS says the app is **“damaged”** and there is no second **Open** button, remove the quarantine attribute in Terminal:
 
 ```bash
 xattr -cr "/Applications/Cat Break.app"
 open "/Applications/Cat Break.app"
 ```
+
+Run the command after dragging the app from the DMG into **Applications**.
 
 **Option 3:** **System Settings** → **Privacy & Security** → **Open Anyway** (after a blocked launch attempt).
 
@@ -34,7 +36,7 @@ Enable **Launch at login** in the app **Settings** (macOS and Windows). The app 
 
 ## Screen recording (optional)
 
-Not required in v1.0.1. If a future version adds a blurred desktop background, grant **Screen Recording** for Cat Break under **Privacy & Security**.
+Not required in v1.0.3. If a future version adds a blurred desktop background, grant **Screen Recording** for Cat Break under **Privacy & Security**.
 
 ## “Cannot open because of a problem”
 
