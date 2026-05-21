@@ -250,3 +250,108 @@ button:hover {
   outline-offset: 2px;
   border-radius: 2px;
 }
+
+.update-banner {
+  margin-bottom: 1rem;
+  padding: 0.95rem 1rem;
+  border-radius: calc(var(--radius) + 2px);
+  background:
+    radial-gradient(120% 90% at 0% 0%, rgba(240, 180, 92, 0.18) 0%, transparent 55%),
+    linear-gradient(155deg, rgba(22, 30, 52, 0.95) 0%, rgba(12, 18, 32, 0.92) 100%);
+  border: 1px solid rgba(110, 231, 255, 0.35);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+}
+
+.update-banner__title {
+  margin: 0 0 0.4rem;
+  font-size: 0.95rem;
+  font-weight: 650;
+  color: var(--text);
+  line-height: 1.35;
+}
+
+.update-banner__hint,
+.update-banner__asset {
+  margin: 0 0 0.65rem;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.update-banner__asset {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.72rem;
+  word-break: break-all;
+}
+
+.update-banner__progress {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0 0 0.75rem;
+}
+
+.update-banner__progress-track {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.update-banner__progress-bar {
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #6ee7ff, #5a9eff);
+  transition: width 0.2s ease;
+}
+
+.update-banner__progress-label {
+  flex: 0 0 auto;
+  min-width: 2.5rem;
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-align: right;
+}
+
+.update-banner__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.update-banner__primary {
+  flex: 1 1 auto;
+  min-width: 10rem;
+  padding: 0.55rem 0.9rem;
+  border: none;
+  border-radius: var(--radius);
+  background: linear-gradient(155deg, #6ee7ff 0%, #5a9eff 55%, #f0b45c 130%);
+  color: #081018;
+  font-size: 0.88rem;
+  font-weight: 650;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(57, 148, 255, 0.32);
+}
+
+.update-banner__primary:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.update-banner__primary:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.update-banner__primary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.update-banner__actions .button-secondary {
+  flex: 0 0 auto;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.85rem;
+}

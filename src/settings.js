@@ -1,5 +1,6 @@
 const fields = [
   "locale",
+  "checkForUpdates",
   "workMinutes",
   "breakMinutes",
   "idlePauseMinutes",
@@ -89,11 +90,86 @@ function fillForm(settings) {
   }
 }
 
+function getUpdateHintKey(update) {
+  if (update.source === "auto") {
+    if (update.status === "downloaded") return "settings.updateHintReady";
+    if (update.status === "downloading") return "settings.updateHintDownloading";
+    return "settings.updateHintAuto";
+  }
+  return "settings.updateHintManual";
+}
+
+function getUpdateActionLabel(update) {
+  if (update.source === "auto" && update.status === "downloaded") {
+    return t("settings.updateInstall");
+  }
+  if (update.source === "auto" && update.status === "downloading") {
+    return t("settings.updateDownloading");
+  }
+  if (update.source === "auto") {
+    return t("settings.updateDownloadInApp");
+  }
+  return t("settings.updateDownload");
+}
+
+function applyUpdateBanner(update) {
+  const banner = document.getElementById("update-banner");
+  const title = document.getElementById("update-banner-title");
+  const hint = document.getElementById("update-banner-hint");
+  const asset = document.getElementById("update-banner-asset");
+  const progressWrap = document.getElementById("update-progress-wrap");
+  const progressBar = document.getElementById("update-progress-bar");
+  const progressLabel = document.getElementById("update-progress-label");
+  const actionBtn = document.getElementById("update-download");
+  if (!banner || !title) return;
+
+  if (!update?.version || update.dismissed) {
+    banner.hidden = true;
+    return;
+  }
+
+  banner.hidden = false;
+  title.textContent = t("settings.updateBannerTitle", { version: update.version });
+
+  if (hint) {
+    hint.textContent = t(getUpdateHintKey(update));
+  }
+
+  if (actionBtn) {
+    actionBtn.textContent = getUpdateActionLabel(update);
+    actionBtn.disabled = update.source === "auto" && update.status === "downloading";
+  }
+
+  const showProgress =
+    update.source === "auto" &&
+    update.status === "downloading" &&
+    update.percent != null;
+  if (progressWrap) {
+    progressWrap.hidden = !showProgress;
+  }
+  if (showProgress && progressBar && progressLabel) {
+    const pct = Math.min(100, Math.max(0, update.percent));
+    progressBar.style.width = `${pct}%`;
+    progressLabel.textContent = t("settings.updateProgress", { percent: pct });
+  }
+
+  if (asset) {
+    if (update.source === "manual" && update.downloadName) {
+      asset.hidden = false;
+      asset.textContent = t("settings.updateAsset", { name: update.downloadName });
+    } else {
+      asset.hidden = true;
+      asset.textContent = "";
+    }
+  }
+}
+
 function applyPayload(data) {
   applyTranslations(data.strings, data.locale);
   applyMeta(data);
   applyLaunchAtLoginVisibility(data.launchAtLoginSupported);
   fillForm(data.settings);
+  applyUpdateBanner(data.update);
 }
 
 async function load() {
@@ -165,6 +241,18 @@ document.getElementById("demoBreak")?.addEventListener("click", async () => {
     console.error(err);
     showBootError(t("settings.saveError"));
   }
+});
+
+document.getElementById("update-download")?.addEventListener("click", async () => {
+  try {
+    await window.catBreak?.openUpdateDownload?.();
+  } catch (err) {
+    console.error(err);
+  }
+});
+
+document.getElementById("update-later")?.addEventListener("click", () => {
+  window.catBreak?.dismissUpdate?.();
 });
 
 window.catBreak.onSettingsUpdated((payload) => {
