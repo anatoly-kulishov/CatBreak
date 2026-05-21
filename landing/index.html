@@ -147,64 +147,349 @@
         </div>
       </section>
 
-      <aside class="panel" id="install-hint">
+      <aside class="panel faq-panel" id="faq" hidden>
         <div data-os-hint="mac" data-lang-panel="en" hidden>
-          <h2>Unsigned build (macOS)</h2>
-          <p>
-            Gatekeeper may block the app the first time. If macOS says the app is damaged, run
-            <code>xattr -cr "/Applications/Cat Break.app"</code>. See
-            <a href="https://github.com/anatoly-kulishov/CatBreak/blob/main/docs/en/MACOS_INSTALL.md">macOS install notes</a>.
-          </p>
+          <h2>FAQ</h2>
+          <div class="faq-list">
+            <details class="faq-item">
+              <summary>How do breaks work?</summary>
+              <p>
+                Tray icon with a countdown tooltip. Right-click: <strong>Start break now</strong>, <strong>Demo (30s)</strong>,
+                postpone, <strong>Settings</strong>, quit. A fullscreen overlay runs the timer; you can skip early.
+              </p>
+            </details>
+            <details class="faq-item">
+              <summary>Why isn’t the app signed by Apple?</summary>
+              <p>
+                Cat Break is distributed without an Apple Developer ID signature. macOS Gatekeeper may block the first launch —
+                that is expected, not a broken download.
+              </p>
+            </details>
+            <details class="faq-item">
+              <summary>Install from DMG or ZIP</summary>
+              <ol class="faq-steps">
+                <li><strong>DMG:</strong> open the image, drag <strong>Cat Break</strong> to <strong>Applications</strong>.</li>
+                <li>
+                  <strong>ZIP:</strong> unzip (often <strong>Downloads</strong>), then move <strong>Cat Break.app</strong> to
+                  <strong>Applications</strong> before daily use.
+                </li>
+              </ol>
+              <p class="faq-steps__note">Requires macOS 12+. Pick <strong>arm64</strong> on Apple Silicon, <strong>x64</strong> on Intel.</p>
+            </details>
+            <details class="faq-item">
+              <summary>“Damaged” app or quarantine (Terminal)</summary>
+              <p class="faq-callout">
+                <strong>Damaged</strong> while <strong>Cat Break.app</strong> is still in <strong>Downloads</strong>?
+                Do not click Move to Trash — run the first command below.
+              </p>
+              <p class="copy-command__label">App in <strong>Downloads</strong> (typical after ZIP):</p>
+              <div class="copy-command copy-command--primary">
+                <code class="copy-command__code">xattr -cr "$HOME/Downloads/Cat Break.app"</code>
+                <button
+                  type="button"
+                  class="copy-command__btn"
+                  data-copy-text='xattr -cr "$HOME/Downloads/Cat Break.app"'
+                >
+                  Copy
+                </button>
+              </div>
+              <p class="copy-command__label copy-command__label--alt">After moving to <strong>Applications</strong>:</p>
+              <div class="copy-command">
+                <code class="copy-command__code">xattr -cr "/Applications/Cat Break.app"</code>
+                <button
+                  type="button"
+                  class="copy-command__btn"
+                  data-copy-text='xattr -cr "/Applications/Cat Break.app"'
+                >
+                  Copy
+                </button>
+              </div>
+              <p class="faq-steps__note">Adjust the path if the unzip folder name differs.</p>
+            </details>
+            <details class="faq-item">
+              <summary>Open without Terminal</summary>
+              <p>
+                Right-click <strong>Cat Break.app</strong> → <strong>Open</strong> → <strong>Open</strong> again. Or
+                <strong>System Settings</strong> → <strong>Privacy &amp; Security</strong> → <strong>Open Anyway</strong>.
+              </p>
+            </details>
+            <details class="faq-item">
+              <summary>Launch at login</summary>
+              <p>Enable <strong>Launch at login</strong> in the app <strong>Settings</strong>.</p>
+            </details>
+          </div>
         </div>
         <div data-os-hint="mac" data-lang-panel="ru" hidden>
-          <h2>Без подписи (macOS)</h2>
-          <p>
-            Gatekeeper может заблокировать приложение. Если macOS пишет «повреждено», выполните
-            <code>xattr -cr "/Applications/Cat Break.app"</code>. См.
-            <a href="https://github.com/anatoly-kulishov/CatBreak/blob/main/docs/ru/MACOS_INSTALL.md">заметка по установке</a>.
-          </p>
+          <h2>FAQ</h2>
+          <div class="faq-list">
+            <details class="faq-item">
+              <summary>Как работают перерывы?</summary>
+              <p>
+                Иконка в строке меню и таймер во всплывающей подсказке. ПКМ: <strong>Начать перерыв</strong>,
+                <strong>Демо (30 сек)</strong>, отложить, <strong>Настройки</strong>, выход. Полноэкранный оверлей с отсчётом, можно завершить досрочно.
+              </p>
+            </details>
+            <details class="faq-item">
+              <summary>Почему нет подписи Apple?</summary>
+              <p>
+                Сборка без Apple Developer ID. Gatekeeper может заблокировать первый запуск — это ожидаемо, а не «битый» файл.
+              </p>
+            </details>
+            <details class="faq-item">
+              <summary>Установка: DMG и ZIP</summary>
+              <ol class="faq-steps">
+                <li><strong>DMG:</strong> откройте образ, перетащите <strong>Cat Break</strong> в <strong>Программы</strong>.</li>
+                <li>
+                  <strong>ZIP:</strong> распакуйте (часто <strong>Загрузки</strong>), затем перенесите <strong>Cat Break.app</strong> в
+                  <strong>Программы</strong>.
+                </li>
+              </ol>
+              <p class="faq-steps__note">Нужен macOS 12+. На Apple Silicon — <strong>arm64</strong>, на Intel — <strong>x64</strong>.</p>
+            </details>
+            <details class="faq-item">
+              <summary>«Повреждено» и quarantine (Терминал)</summary>
+              <p class="faq-callout">
+                Окно «<strong>повреждено</strong>» и приложение в <strong>Загрузках</strong>?
+                Не нажимайте «Переместить в Корзину» — выполните первую команду.
+              </p>
+              <p class="copy-command__label">Приложение в <strong>Загрузках</strong> (типично после ZIP):</p>
+              <div class="copy-command copy-command--primary">
+                <code class="copy-command__code">xattr -cr "$HOME/Downloads/Cat Break.app"</code>
+                <button
+                  type="button"
+                  class="copy-command__btn"
+                  data-copy-text='xattr -cr "$HOME/Downloads/Cat Break.app"'
+                >
+                  Скопировать
+                </button>
+              </div>
+              <p class="copy-command__label copy-command__label--alt">После переноса в <strong>Программы</strong>:</p>
+              <div class="copy-command">
+                <code class="copy-command__code">xattr -cr "/Applications/Cat Break.app"</code>
+                <button
+                  type="button"
+                  class="copy-command__btn"
+                  data-copy-text='xattr -cr "/Applications/Cat Break.app"'
+                >
+                  Скопировать
+                </button>
+              </div>
+              <p class="faq-steps__note">Подставьте свой путь, если папка после распаковки называется иначе.</p>
+            </details>
+            <details class="faq-item">
+              <summary>Открыть без Терминала</summary>
+              <p>
+                ПКМ по <strong>Cat Break.app</strong> → <strong>Открыть</strong> → <strong>Открыть</strong>.
+                Или <strong>Системные настройки</strong> → <strong>Конфиденциальность и безопасность</strong> → <strong>Всё равно открыть</strong>.
+              </p>
+            </details>
+            <details class="faq-item">
+              <summary>Автозапуск</summary>
+              <p>Включите <strong>Запускать при входе в систему</strong> в <strong>Настройках</strong> приложения.</p>
+            </details>
+          </div>
         </div>
         <div data-os-hint="win" data-lang-panel="en" hidden>
-          <h2>Unsigned build (Windows)</h2>
-          <p>
-            SmartScreen may warn about an unknown publisher. Choose <strong>More info → Run anyway</strong>, or see
-            <a href="https://github.com/anatoly-kulishov/CatBreak/blob/main/docs/en/WINDOWS_INSTALL.md">Windows install notes</a>.
-          </p>
+          <h2>FAQ</h2>
+          <div class="faq-list">
+            <details class="faq-item">
+              <summary>How do breaks work?</summary>
+              <p>
+                System tray icon with countdown. Right-click: start break, <strong>Demo (30s)</strong>, postpone, settings, quit.
+                Fullscreen overlay with timer; early skip is supported.
+              </p>
+            </details>
+            <details class="faq-item">
+              <summary>SmartScreen or unknown publisher</summary>
+              <p>
+                The build is not code-signed for SmartScreen. On the warning, choose <strong>More info</strong> →
+                <strong>Run anyway</strong>.
+              </p>
+            </details>
+            <details class="faq-item">
+              <summary>Setup installer vs portable .exe</summary>
+              <p>
+                <strong>Setup</strong> installs like a normal app. <strong>Portable</strong> is a single <code>.exe</code> you can run
+                from any folder — no installer, settings stay next to the file.
+              </p>
+            </details>
+            <details class="faq-item">
+              <summary>Tray icon not visible</summary>
+              <p>Check the hidden icons area (^) in the notification area. Cat Break stays in the tray while running.</p>
+            </details>
+            <details class="faq-item">
+              <summary>Launch at login</summary>
+              <p>Enable <strong>Launch at login</strong> in <strong>Settings</strong>.</p>
+            </details>
+          </div>
         </div>
         <div data-os-hint="win" data-lang-panel="ru" hidden>
-          <h2>Без подписи (Windows)</h2>
-          <p>
-            SmartScreen может предупредить об издателе. <strong>Подробнее → Выполнить в любом случае</strong>, либо
-            <a href="https://github.com/anatoly-kulishov/CatBreak/blob/main/docs/ru/WINDOWS_INSTALL.md">заметка по установке</a>.
-          </p>
+          <h2>FAQ</h2>
+          <div class="faq-list">
+            <details class="faq-item">
+              <summary>Как работают перерывы?</summary>
+              <p>
+                Иконка в трее и обратный отсчёт во всплывающей подсказке. ПКМ: начать перерыв, <strong>Демо (30 сек)</strong>,
+                отложить, настройки, выход. Полноэкранный оверлей, можно завершить досрочно.
+              </p>
+            </details>
+            <details class="faq-item">
+              <summary>SmartScreen и неизвестный издатель</summary>
+              <p>
+                Сборка без подписи для SmartScreen. В предупреждении: <strong>Подробнее</strong> →
+                <strong>Выполнить в любом случае</strong>.
+              </p>
+            </details>
+            <details class="faq-item">
+              <summary>Setup и portable .exe</summary>
+              <p>
+                <strong>Setup</strong> — обычная установка. <strong>Portable</strong> — один <code>.exe</code> из любой папки, без
+                инсталлятора; настройки рядом с файлом.
+              </p>
+            </details>
+            <details class="faq-item">
+              <summary>Нет иконки в трее</summary>
+              <p>Проверьте скрытые значки (^) в области уведомлений. Пока приложение запущено, оно в трее.</p>
+            </details>
+            <details class="faq-item">
+              <summary>Автозапуск</summary>
+              <p>Включите <strong>Запускать при входе в систему</strong> в <strong>Настройках</strong>.</p>
+            </details>
+          </div>
         </div>
         <div data-os-hint="linux" data-lang-panel="en" hidden>
-          <h2>Linux packages</h2>
-          <p>
-            AppImage: <code>chmod +x</code> then run. For <code>.deb</code>, use your package manager. See
-            <a href="https://github.com/anatoly-kulishov/CatBreak/blob/main/docs/en/LINUX_INSTALL.md">Linux install notes</a>.
-          </p>
+          <h2>FAQ</h2>
+          <div class="faq-list">
+            <details class="faq-item">
+              <summary>How do breaks work?</summary>
+              <p>Status tray icon, right-click menu, fullscreen break overlay. Wayland support depends on your desktop environment.</p>
+            </details>
+            <details class="faq-item">
+              <summary>AppImage or .deb</summary>
+              <p>
+                <strong>AppImage:</strong> <code>chmod +x Cat_Break-*.AppImage</code> then run.<br />
+                <strong>.deb:</strong> <code>sudo dpkg -i cat-break_*_amd64.deb</code>, launch from the app menu or <code>cat-break</code>.
+              </p>
+            </details>
+            <details class="faq-item">
+              <summary>Tray icon missing</summary>
+              <p>
+                Install AppIndicator support (<code>libayatana-appindicator3-1</code> on Ubuntu/Debian). On GNOME you may need a
+                tray extension.
+              </p>
+            </details>
+            <details class="faq-item">
+              <summary>X11 vs Wayland</summary>
+              <p>X11 is the most reliable. On Wayland, overlay and tray behavior can vary by compositor.</p>
+            </details>
+            <details class="faq-item">
+              <summary>Launch at login</summary>
+              <p>Enable <strong>Launch at login</strong> in <strong>Settings</strong>.</p>
+            </details>
+          </div>
         </div>
         <div data-os-hint="linux" data-lang-panel="ru" hidden>
-          <h2>Linux</h2>
-          <p>
-            AppImage: <code>chmod +x</code> и запуск. Для <code>.deb</code> — через менеджер пакетов. См.
-            <a href="https://github.com/anatoly-kulishov/CatBreak/blob/main/docs/ru/LINUX_INSTALL.md">заметку по установке</a>.
-          </p>
+          <h2>FAQ</h2>
+          <div class="faq-list">
+            <details class="faq-item">
+              <summary>Как работают перерывы?</summary>
+              <p>Иконка в трее, меню по ПКМ, полноэкранный перерыв. На Wayland поведение зависит от окружения.</p>
+            </details>
+            <details class="faq-item">
+              <summary>AppImage или .deb</summary>
+              <p>
+                <strong>AppImage:</strong> <code>chmod +x Cat_Break-*.AppImage</code>, затем запуск.<br />
+                <strong>.deb:</strong> <code>sudo dpkg -i cat-break_*_amd64.deb</code>, из меню или <code>cat-break</code>.
+              </p>
+            </details>
+            <details class="faq-item">
+              <summary>Нет иконки в трее</summary>
+              <p>
+                Установите AppIndicator (<code>libayatana-appindicator3-1</code> в Ubuntu/Debian). В GNOME может понадобиться
+                расширение для трея.
+              </p>
+            </details>
+            <details class="faq-item">
+              <summary>X11 и Wayland</summary>
+              <p>Надёжнее на X11. На Wayland оверлей и трей зависят от композитора.</p>
+            </details>
+            <details class="faq-item">
+              <summary>Автозапуск</summary>
+              <p>Включите <strong>Запускать при входе в систему</strong> в <strong>Настройках</strong>.</p>
+            </details>
+          </div>
         </div>
         <div data-os-hint="any" data-lang-panel="en" hidden>
-          <h2>Install notes</h2>
-          <p>Pick your platform above. Unsigned builds — see install notes for macOS, Windows, or Linux in the repo docs.</p>
+          <h2>FAQ</h2>
+          <div class="faq-list">
+            <details class="faq-item">
+              <summary>How do breaks work?</summary>
+              <p>Tray timer, fullscreen cat overlay, settings for work/break intervals. Pick your OS above to download.</p>
+            </details>
+            <details class="faq-item">
+              <summary>macOS install</summary>
+              <p>Unsigned build: Gatekeeper, DMG/ZIP, “damaged” in Downloads — see install notes.</p>
+              <p class="faq-more">
+                <a href="https://github.com/anatoly-kulishov/CatBreak/blob/main/docs/en/MACOS_INSTALL.md">macOS install notes</a>
+              </p>
+            </details>
+            <details class="faq-item">
+              <summary>Windows install</summary>
+              <p>SmartScreen warning, Setup vs portable, tray icon.</p>
+              <p class="faq-more">
+                <a href="https://github.com/anatoly-kulishov/CatBreak/blob/main/docs/en/WINDOWS_INSTALL.md">Windows install notes</a>
+              </p>
+            </details>
+            <details class="faq-item">
+              <summary>Linux install</summary>
+              <p>AppImage or .deb, tray packages, X11 vs Wayland.</p>
+              <p class="faq-more">
+                <a href="https://github.com/anatoly-kulishov/CatBreak/blob/main/docs/en/LINUX_INSTALL.md">Linux install notes</a>
+              </p>
+            </details>
+          </div>
         </div>
         <div data-os-hint="any" data-lang-panel="ru" hidden>
-          <h2>Установка</h2>
-          <p>Выберите систему выше. Сборки без подписи — см. заметки по установке для macOS, Windows и Linux в репозитории.</p>
+          <h2>FAQ</h2>
+          <div class="faq-list">
+            <details class="faq-item">
+              <summary>Как работают перерывы?</summary>
+              <p>Таймер в трее, полноэкранный оверлей, настройки интервалов. Выберите систему выше для скачивания.</p>
+            </details>
+            <details class="faq-item">
+              <summary>Установка на macOS</summary>
+              <p>Без подписи Apple: Gatekeeper, DMG/ZIP, «повреждено» в Загрузках — в заметке.</p>
+              <p class="faq-more">
+                <a href="https://github.com/anatoly-kulishov/CatBreak/blob/main/docs/ru/MACOS_INSTALL.md">Заметка по macOS</a>
+              </p>
+            </details>
+            <details class="faq-item">
+              <summary>Установка на Windows</summary>
+              <p>SmartScreen, Setup и portable, иконка в трее.</p>
+              <p class="faq-more">
+                <a href="https://github.com/anatoly-kulishov/CatBreak/blob/main/docs/ru/WINDOWS_INSTALL.md">Заметка по Windows</a>
+              </p>
+            </details>
+            <details class="faq-item">
+              <summary>Установка на Linux</summary>
+              <p>AppImage или .deb, пакеты для трея, X11 и Wayland.</p>
+              <p class="faq-more">
+                <a href="https://github.com/anatoly-kulishov/CatBreak/blob/main/docs/ru/LINUX_INSTALL.md">Заметка по Linux</a>
+              </p>
+            </details>
+          </div>
         </div>
       </aside>
 
       <footer class="page-foot">
-        <span data-lang-panel="en">MIT · Not medical advice · Kind to your eyes</span>
-        <span data-lang-panel="ru" hidden>MIT · Не медсовет · Берегите глаза</span>
+        <p class="page-foot__line" data-lang-panel="en">
+          <span class="page-foot__base">MIT · Not medical advice · </span>
+          <span class="page-foot__quip" data-footer-quip></span>
+        </p>
+        <p class="page-foot__line" data-lang-panel="ru" hidden>
+          <span class="page-foot__base">MIT · Не медсовет · </span>
+          <span class="page-foot__quip" data-footer-quip></span>
+        </p>
       </footer>
     </div>
 

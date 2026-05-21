@@ -30,13 +30,7 @@ CSS-переменные в `landing/styles.css`:
 | `--accent-soft` | `rgba(110, 231, 255, 0.12)` | Фон выбранного pill |
 | `--radius` | `14px` | Кнопки, панели, platform picker |
 
-**Фон body (градиент):**
-
-```css
-radial-gradient(1200px 800px at 20% -10%, #1a2a4a 0%, transparent 55%),
-radial-gradient(900px 700px at 100% 0%, #243054 0%, transparent 50%),
-var(--bg);
-```
+**Фон body:** несколько radial + вертикальный linear; `::before` — точечная сетка с mask; `::after` — размытый conic-glow (лёгкая анимация, отключается при `prefers-reduced-motion`). См. `landing/styles.css`.
 
 **Primary gradient (активная кнопка платформы):**
 
@@ -165,7 +159,7 @@ npm run prepare
 
 ```
 landing/
-  index.html      # разметка, #download-platform, #install-hint
+  index.html      # разметка, #download-platform, #faq
   styles.css      # design tokens (:root)
   download.js     # releases API, OS detect, i18n
   app-icon.png    # генерируется prepare-icons

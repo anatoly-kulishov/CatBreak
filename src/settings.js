@@ -26,6 +26,14 @@ function t(key, params = {}) {
   );
 }
 
+function savedStatusMessage() {
+  const purrs = strings?.settings?.savedPurrs;
+  if (Array.isArray(purrs) && purrs.length > 0 && Math.random() < 0.38) {
+    return purrs[Math.floor(Math.random() * purrs.length)];
+  }
+  return t("settings.saved");
+}
+
 function applyTranslations(messages, locale) {
   strings = messages;
   activeLocale = locale;
@@ -134,10 +142,11 @@ document.querySelectorAll("[data-preset-work][data-preset-break]").forEach((btn)
 document.getElementById("save")?.addEventListener("click", async () => {
   try {
     await window.catBreak.saveSettings(readForm());
-    setStatus(t("settings.saved"), "success");
+    const savedMsg = savedStatusMessage();
+    setStatus(savedMsg, "success");
     const status = document.getElementById("status");
     window.setTimeout(() => {
-      if (status?.textContent === t("settings.saved")) {
+      if (status?.textContent === savedMsg) {
         status.textContent = "";
         status.classList.remove("status--error");
       }
