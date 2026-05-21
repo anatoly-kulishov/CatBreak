@@ -30,6 +30,18 @@
 
     <section class="settings-section" aria-labelledby="sec-timing">
       <h2 id="sec-timing" class="settings-section__title" data-i18n="settings.sectionTiming"></h2>
+      <div class="preset-grid">
+        <button type="button" class="preset-button" data-preset-work="55" data-preset-break="5">
+          <span data-i18n="settings.presetLong"></span>
+        </button>
+        <button type="button" class="preset-button" data-preset-work="50" data-preset-break="10">
+          <span data-i18n="settings.presetBalanced"></span>
+        </button>
+        <button type="button" class="preset-button" data-preset-work="25" data-preset-break="5">
+          <span data-i18n="settings.presetPomodoro"></span>
+        </button>
+      </div>
+      <p class="field-hint field-hint--preset" data-i18n="settings.quickStartHint"></p>
       <label class="field">
         <span class="field__label" data-i18n="settings.workMinutes"></span>
         <input id="workMinutes" type="number" min="1" max="480" />
@@ -75,6 +87,7 @@
 
     <div class="actions">
       <button id="save" type="button" data-i18n="settings.save"></button>
+      <button id="demoBreak" class="button-secondary" type="button" data-i18n="settings.demoBreak"></button>
     </div>
 
     <p id="status" class="status" role="status"></p>

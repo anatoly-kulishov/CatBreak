@@ -62,4 +62,4 @@ On Wayland the break overlay may not cover all windows. If the break does not go
 
 - Packages are not officially signed.
 - `alwaysOnTop` behavior varies by desktop environment (KDE, GNOME, etc.).
-- **Launch at login** is not available on Linux in v1.0.1 (macOS and Windows only).
+- **Launch at login** is not available on Linux in v1.0.3 (macOS and Windows only).

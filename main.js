@@ -55,6 +55,7 @@ let preBreakNotified = false;
 const BREAK_EXIT_ANIM_MS = 1100;
 const BREAK_EXIT_FAST_MS = 280;
 let tickTimer = null;
+let isFirstRun = false;
 
 if (!app.requestSingleInstanceLock()) {
   app.quit();
@@ -65,6 +66,7 @@ function getTranslator() {
 }
 
 function loadSettings() {
+  isFirstRun = !fs.existsSync(SETTINGS_PATH);
   try {
     const raw = fs.readFileSync(SETTINGS_PATH, "utf8");
     settings = { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
@@ -337,7 +339,7 @@ function requestBreakExit({ fast = false } = {}) {
   breakExitRequested = true;
 
   const delayMs = fast ? BREAK_EXIT_FAST_MS : BREAK_EXIT_ANIM_MS;
-  const playSound = settings.soundOnBreakEnd && !fast;
+  const playSound = settings.soundOnBreakEnd;
 
   for (const win of breakWindows.values()) {
     if (!win.isDestroyed()) {
@@ -394,7 +396,7 @@ function openSettings() {
 
   settingsWindow = new BrowserWindow({
     width: 400,
-    height: 680,
+    height: 740,
     resizable: false,
     show: false,
     backgroundColor: "#1a1a1a",
@@ -466,6 +468,9 @@ app.whenReady().then(() => {
   createTray();
   startTick();
   hideDockIfNeeded();
+  if (isFirstRun) {
+    openSettings();
+  }
 });
 
 app.on("window-all-closed", (e) => {
@@ -510,4 +515,9 @@ ipcMain.handle("save-settings", (_e, next) => {
 
 ipcMain.handle("skip-break", () => {
   requestBreakExit({ fast: true });
+});
+
+ipcMain.handle("start-demo-break", () => {
+  startBreak({ demo: true, seconds: 30 });
+  return true;
 });

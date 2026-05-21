@@ -13,7 +13,7 @@
 
 **Репозиторий:** https://github.com/anatoly-kulishov/CatBreak  
 **Ветки:** `main` (stable), `develop` (работа). PR: `develop` → `main`.  
-**Версия:** см. `package.json` (сейчас **1.0.2**).
+**Версия:** см. `package.json` (сейчас **1.0.3**).
 
 ---
 
@@ -84,9 +84,10 @@ flowchart TB
 **Важные функции в `main.js`:**
 
 - `tick()` — сердце логики; **не** выставлять `breakExitRequested` до `requestBreakExit()` (баг 1.0.0)
-- `startBreak({ demo, seconds })` — demo = 30 с из tray
-- `requestBreakExit({ fast })` — IPC + анимация; `playSound` если `soundOnBreakEnd && !fast`
+- `startBreak({ demo, seconds })` — demo = 30 с из tray или Settings
+- `requestBreakExit({ fast })` — IPC + анимация; `playSound` если включено `soundOnBreakEnd` (и при досрочном выходе)
 - `postponeBreak(5|10)` — только когда **не** onBreak
+- Первый запуск без `settings.json` автоматически открывает Settings.
 
 ---
 

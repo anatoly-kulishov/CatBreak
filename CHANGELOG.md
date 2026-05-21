@@ -1,5 +1,39 @@
 # Changelog
 
+## [1.0.3] - 2026-05-21
+
+### Added
+
+- Settings open automatically on first launch when no saved settings exist
+- Timer presets in Settings: 55/5, 50/10, and 25/5
+- Demo break button in Settings
+- macOS install guidance for the “app is damaged” Gatekeeper dialog
+
+### Changed
+
+- Tray menu labels are clearer: “Postpone 5 minutes” and “Restart work timer”
+- Settings window height adjusted for the quick-start controls
+- Meow at break end now plays on early exit too (skip, close window, tray “End break”) when enabled
+
+## [1.0.2] - 2026-05-20
+
+### Added
+
+- Settings grouped into sections (General, Timing, Break behavior) with helper hints
+- Landing: release loading label and pending state for the version pill
+- `prefers-reduced-motion` support on break overlay and landing spinner
+
+### Fixed
+
+- Linux `.deb` build: `author` / `maintainer` in `package.json` for electron-builder
+- Landing download menu: distinct labels for Windows installer vs portable, macOS DMG vs ZIP
+
+### Changed
+
+- App UI (Settings, break overlay) aligned with landing design tokens (cyan accent, dark surfaces)
+- Tray menu regrouped: break actions, postpone, reset, settings, quit
+- Save feedback and focus styles in Settings
+
 ## [1.0.1] - 2026-05-19
 
 ### Added
