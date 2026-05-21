@@ -13,7 +13,7 @@
 
 **Репозиторий:** https://github.com/anatoly-kulishov/CatBreak  
 **Ветки:** `main` (stable), `develop` (работа). PR: `develop` → `main`.  
-**Версия:** см. `package.json` (сейчас **1.0.3**).
+**Версия:** см. `package.json` (сейчас **1.0.4**).
 
 ---
 

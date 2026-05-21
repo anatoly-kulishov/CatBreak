@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.4] - 2026-05-21
+
+### Added
+
+- In-app update checks: GitHub Releases API fallback and `electron-updater` in packaged builds
+- Settings update banner with download progress and tray actions (check, download, install)
+- GitHub Actions release workflow (`v*`) publishing artifacts and `latest-*.yml` for auto-update
+
 ## [1.0.3] - 2026-05-21
 
 ### Added
