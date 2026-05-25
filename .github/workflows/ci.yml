@@ -25,5 +25,7 @@ jobs:
       - run: node --check lib/autostart.js
       - run: node --check lib/releases.js
       - run: node --check lib/updater.js
+      - run: node --check src/settings.js
+      - run: node --check src/update-dialog.js
       - run: node --check preload.js
       - run: node --check landing/download.js

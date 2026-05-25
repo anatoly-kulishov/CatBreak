@@ -13,7 +13,7 @@
 
 **Репозиторий:** https://github.com/anatoly-kulishov/CatBreak  
 **Ветки:** `main` (stable), `develop` (работа). PR: `develop` → `main`.  
-**Версия:** см. `package.json` (сейчас **1.0.5**).
+**Версия:** см. `package.json` (сейчас **1.0.6**).
 
 ---
 
@@ -253,7 +253,7 @@ CI (`ci.yml`): `npm ci`, `prepare`, `node --check` на main.js, lib/*, preload,
 
 ## 13. Известные ограничения
 
-- **Обновления:** этап 1 — GitHub API + ручная загрузка (`lib/releases.js`); этап 2 — `electron-updater` в упакованной сборке (`lib/updater.js`), fallback на API если нет `latest-*.yml` на релизе. CI: `.github/workflows/release.yml` публикует артефакты и yml по тегу `v*`. macOS auto-install требует подпись Apple; без подписи — скачивание в приложении + установка как на сайте.
+- **Обновления:** упакованная сборка — `electron-updater` (фоновая загрузка, `latest-*.yml` по тегу `v*`); fallback — GitHub API (`lib/releases.js`). Settings: статус, «Проверить обновления», баннер с прогрессом; на **macOS** диалог с иконкой кота (in-app, `src/update-dialog.html` или модалка в Settings); на Win/Linux — нативный диалог + `.ico`. Настройки: `autoDownloadUpdates`, `autoInstallOnQuit`. macOS `quitAndInstall` без подписи Apple часто не срабатывает — ручная установка из Releases. Артефакты релиза: `Cat-Break-${version}-${arch}.${ext}`.
 - Нет подписи бинарников
 - Settings/Break UI — **legacy** палитра (orange CTA); лендинг — новая cyan DS (см. DESIGN_SYSTEM)
 - `landing/` и docs могут быть в `develop` раньше, чем в `main`

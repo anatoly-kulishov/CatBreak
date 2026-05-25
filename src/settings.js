@@ -1,6 +1,8 @@
 const fields = [
   "locale",
   "checkForUpdates",
+  "autoDownloadUpdates",
+  "autoInstallOnQuit",
   "workMinutes",
   "breakMinutes",
   "idlePauseMinutes",
@@ -44,6 +46,11 @@ function applyTranslations(messages, locale) {
     const key = el.dataset.i18n;
     el.textContent = t(key);
   });
+
+  const checkBtn = document.getElementById("check-updates-now");
+  if (checkBtn?.dataset.i18n) {
+    checkBtn.textContent = t(checkBtn.dataset.i18n);
+  }
 }
 
 function applyMeta({ appVersion, releasesUrl }) {
@@ -62,6 +69,14 @@ function applyLaunchAtLoginVisibility(supported) {
   const row = document.getElementById("launchAtLoginRow");
   if (row) {
     row.hidden = !supported;
+  }
+}
+
+function applyUpdateOptionsVisibility() {
+  const enabled = !!document.getElementById("checkForUpdates")?.checked;
+  for (const id of ["autoDownloadUpdatesRow", "autoInstallOnQuitRow"]) {
+    const row = document.getElementById(id);
+    if (row) row.hidden = !enabled;
   }
 }
 
@@ -112,7 +127,70 @@ function getUpdateActionLabel(update) {
   return t("settings.updateDownload");
 }
 
-function applyUpdateBanner(update) {
+function formatLastChecked(ts) {
+  if (!ts) return "";
+  try {
+    return new Date(ts).toLocaleString(activeLocale === "ru" ? "ru-RU" : "en-US", {
+      dateStyle: "short",
+      timeStyle: "short",
+    });
+  } catch {
+    return "";
+  }
+}
+
+function updateChannelLabel(channel) {
+  const key =
+    channel === "auto"
+      ? "settings.updateChannelAuto"
+      : channel === "manual"
+        ? "settings.updateChannelManual"
+        : channel === "off"
+          ? "settings.updateChannelOff"
+          : null;
+  return key ? t(key) : "";
+}
+
+function applyUpdateStatusLine(state) {
+  const line = document.getElementById("update-status-line");
+  if (!line || !state) return;
+
+  const channelLabel = state.phase !== "checking" ? updateChannelLabel(state.channel) : "";
+
+  switch (state.phase) {
+    case "checking":
+      line.textContent = t("settings.updateStatusChecking");
+      break;
+    case "available":
+      line.textContent = t("settings.updateStatusAvailable", { version: state.version });
+      break;
+    case "downloading":
+      line.textContent = t("settings.updateStatusDownloading", { version: state.version });
+      break;
+    case "downloaded":
+      line.textContent = t("settings.updateStatusReady", { version: state.version });
+      break;
+    case "up_to_date":
+      line.textContent = t("settings.updateStatusUpToDate", {
+        version: state.currentVersion,
+        when: formatLastChecked(state.lastCheckedAt) || "—",
+      });
+      break;
+    case "error":
+      line.textContent = state.error
+        ? `${t("settings.updateStatusError")} ${state.error}`
+        : t("settings.updateStatusError");
+      break;
+    default:
+      line.textContent = t("settings.updateStatusIdle");
+  }
+
+  if (channelLabel && line.textContent) {
+    line.textContent = `${line.textContent} · ${channelLabel}`;
+  }
+}
+
+function applyUpdateBanner(state) {
   const banner = document.getElementById("update-banner");
   const title = document.getElementById("update-banner-title");
   const hint = document.getElementById("update-banner-hint");
@@ -123,43 +201,108 @@ function applyUpdateBanner(update) {
   const actionBtn = document.getElementById("update-download");
   if (!banner || !title) return;
 
-  if (!update?.version || update.dismissed) {
+  const showBanner =
+    state?.version &&
+    !state.dismissed &&
+    ["available", "downloading", "downloaded"].includes(state.phase);
+
+  if (!showBanner) {
     banner.hidden = true;
     return;
   }
 
   banner.hidden = false;
-  title.textContent = t("settings.updateBannerTitle", { version: update.version });
+  title.textContent = t("settings.updateBannerTitle", { version: state.version });
 
   if (hint) {
-    hint.textContent = t(getUpdateHintKey(update));
+    hint.textContent = t(getUpdateHintKey(state));
   }
 
   if (actionBtn) {
-    actionBtn.textContent = getUpdateActionLabel(update);
-    actionBtn.disabled = update.source === "auto" && update.status === "downloading";
+    actionBtn.textContent = getUpdateActionLabel(state);
+    actionBtn.disabled = state.source === "auto" && state.status === "downloading";
   }
 
   const showProgress =
-    update.source === "auto" &&
-    update.status === "downloading" &&
-    update.percent != null;
+    state.source === "auto" &&
+    state.status === "downloading" &&
+    state.percent != null;
   if (progressWrap) {
     progressWrap.hidden = !showProgress;
   }
   if (showProgress && progressBar && progressLabel) {
-    const pct = Math.min(100, Math.max(0, update.percent));
+    const pct = Math.min(100, Math.max(0, state.percent));
     progressBar.style.width = `${pct}%`;
     progressLabel.textContent = t("settings.updateProgress", { percent: pct });
   }
 
   if (asset) {
-    if (update.source === "manual" && update.downloadName) {
+    if (state.source === "manual" && state.downloadName) {
       asset.hidden = false;
-      asset.textContent = t("settings.updateAsset", { name: update.downloadName });
+      asset.textContent = t("settings.updateAsset", { name: state.downloadName });
     } else {
       asset.hidden = true;
       asset.textContent = "";
+    }
+  }
+}
+
+function hideUpdateModal() {
+  const modal = document.getElementById("update-modal");
+  if (modal) modal.hidden = true;
+}
+
+function showUpdateModal(payload) {
+  const modal = document.getElementById("update-modal");
+  const title = document.getElementById("update-modal-title");
+  const detail = document.getElementById("update-modal-detail");
+  const actionsEl = document.getElementById("update-modal-actions");
+  if (!modal || !title || !detail || !actionsEl || !payload) return;
+
+  title.textContent = payload.title || "";
+  detail.textContent = payload.detail || "";
+  actionsEl.replaceChildren();
+
+  for (const action of payload.actions || []) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = action.label;
+    btn.className = action.primary
+      ? "update-modal__btn update-modal__btn--primary"
+      : "update-modal__btn";
+    btn.addEventListener("click", async () => {
+      hideUpdateModal();
+      try {
+        await window.catBreak?.updateDialogAction?.(action.id);
+      } catch (err) {
+        console.error(err);
+      }
+    });
+    actionsEl.appendChild(btn);
+  }
+
+  modal.hidden = false;
+}
+
+function applyUpdateUi(data) {
+  const state =
+    data.updateState ||
+    (data.update?.version
+      ? { phase: "available", ...data.update }
+      : data.update === null && data.settings?.updateLastCheckAt
+        ? { phase: "up_to_date", currentVersion: data.appVersion, lastCheckedAt: data.settings.updateLastCheckAt }
+        : { phase: "idle", currentVersion: data.appVersion });
+
+  applyUpdateStatusLine(state);
+  applyUpdateBanner(state);
+
+  const checkBtn = document.getElementById("check-updates-now");
+  if (checkBtn) {
+    checkBtn.disabled = !!state.checking;
+    if (!checkBtn.dataset.i18nBound) {
+      checkBtn.dataset.i18n = "settings.updateCheckNow";
+      checkBtn.textContent = t("settings.updateCheckNow");
+      checkBtn.dataset.i18nBound = "1";
     }
   }
 }
@@ -169,7 +312,8 @@ function applyPayload(data) {
   applyMeta(data);
   applyLaunchAtLoginVisibility(data.launchAtLoginSupported);
   fillForm(data.settings);
-  applyUpdateBanner(data.update);
+  applyUpdateOptionsVisibility();
+  applyUpdateUi(data);
 }
 
 async function load() {
@@ -203,6 +347,10 @@ function readForm() {
   if (document.getElementById("launchAtLoginRow")?.hidden) {
     next.launchAtLogin = false;
   }
+  if (!next.checkForUpdates) {
+    next.autoDownloadUpdates = false;
+    next.autoInstallOnQuit = false;
+  }
   return next;
 }
 
@@ -214,6 +362,8 @@ document.querySelectorAll("[data-preset-work][data-preset-break]").forEach((btn)
     if (breakMinutes) breakMinutes.value = btn.dataset.presetBreak;
   });
 });
+
+document.getElementById("checkForUpdates")?.addEventListener("change", applyUpdateOptionsVisibility);
 
 document.getElementById("save")?.addEventListener("click", async () => {
   try {
@@ -255,8 +405,30 @@ document.getElementById("update-later")?.addEventListener("click", () => {
   window.catBreak?.dismissUpdate?.();
 });
 
+document.getElementById("check-updates-now")?.addEventListener("click", async () => {
+  const btn = document.getElementById("check-updates-now");
+  if (btn) btn.disabled = true;
+  applyUpdateStatusLine({ phase: "checking" });
+  try {
+    await window.catBreak?.checkForUpdates?.();
+  } catch (err) {
+    console.error(err);
+    setStatus(t("settings.updateStatusError"), "error");
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+});
+
 window.catBreak.onSettingsUpdated((payload) => {
   applyPayload(payload);
+});
+
+window.catBreak.onUpdateDialog?.((payload) => {
+  showUpdateModal(payload);
+});
+
+document.querySelectorAll("[data-update-modal-dismiss]").forEach((el) => {
+  el.addEventListener("click", hideUpdateModal);
 });
 
 if (document.readyState === "loading") {

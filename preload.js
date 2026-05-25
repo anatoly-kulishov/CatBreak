@@ -10,6 +10,10 @@ contextBridge.exposeInMainWorld("catBreak", {
   installUpdate: () => ipcRenderer.invoke("install-update"),
   dismissUpdate: () => ipcRenderer.invoke("dismiss-update"),
   checkForUpdates: () => ipcRenderer.invoke("check-for-updates"),
+  updateDialogAction: (action) => ipcRenderer.invoke("update-dialog-action", action),
+  onUpdateDialog: (cb) => {
+    ipcRenderer.on("update-dialog", (_e, payload) => cb(payload));
+  },
   onBreakInit: (cb) => {
     ipcRenderer.on("break-init", (_e, payload) => cb(payload));
   },

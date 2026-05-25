@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="color-scheme" content="dark" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self'"
+    />
+    <title>Cat Break</title>
+    <link rel="stylesheet" href="update-dialog.css" />
+  </head>
+  <body>
+    <main class="update-prompt" role="alertdialog" aria-labelledby="update-prompt-title">
+      <img
+        class="update-prompt__icon"
+        src="../assets/app-icon-1024.png"
+        width="72"
+        height="72"
+        alt=""
+        decoding="async"
+      />
+      <h1 id="update-prompt-title" class="update-prompt__title"></h1>
+      <p id="update-prompt-detail" class="update-prompt__detail"></p>
+      <div id="update-prompt-actions" class="update-prompt__actions"></div>
+    </main>
+    <script src="update-dialog.js"></script>
+  </body>
+</html>

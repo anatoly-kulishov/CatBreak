@@ -8,6 +8,7 @@ const {
   powerMonitor,
   ipcMain,
   shell,
+  dialog,
 } = require("electron");
 const path = require("path");
 const fs = require("fs");
@@ -16,6 +17,8 @@ const {
   configureBreakWindow,
   updateTrayStatus,
   getTrayIconPath,
+  getAppIconPath,
+  getAppIconImage,
   hideDockIfNeeded,
   setAppUserModelId,
   getBreakWindowOptions,
@@ -37,6 +40,7 @@ const {
   checkAutoUpdate,
   downloadAutoUpdate,
   quitAndInstallUpdate,
+  applyAutoUpdaterPreferences,
 } = require("./lib/updater");
 
 const SETTINGS_PATH = path.join(app.getPath("userData"), "settings.json");
@@ -55,6 +59,8 @@ const DEFAULT_SETTINGS = {
   soundOnBreakEnd: true,
   launchAtLogin: false,
   checkForUpdates: true,
+  autoDownloadUpdates: true,
+  autoInstallOnQuit: false,
   updateDismissedVersion: null,
 };
 
@@ -65,6 +71,16 @@ const UPDATE_STARTUP_DELAY_MS = 8 * 1000;
 let updateInfo = null;
 let updateCheckTimer = null;
 let updateCheckInFlight = false;
+let updateLastError = null;
+let updateInstallPromptedVersion = null;
+let updateLastCheckChannel = "manual";
+let updatePromptWindow = null;
+
+/** @param {import('electron').MessageBoxOptions} options */
+function withAppDialogIcon(options) {
+  const icon = getAppIconImage();
+  return icon ? { ...options, icon } : options;
+}
 
 let tray = null;
 let settingsWindow = null;
@@ -148,7 +164,7 @@ function buildUpdateTrayItems(tr) {
     {
       label: tr.t("tray.checkForUpdates"),
       click: () => {
-        checkForUpdates({ notify: true, force: true });
+        checkForUpdates({ notify: true, force: true, showDialog: true, dialogFromTray: true });
       },
     },
   ];
@@ -178,6 +194,7 @@ function syncUpdateFromAutoState() {
   updateInfo = {
     version: auto.info.version,
     name: auto.info.releaseName || auto.info.version,
+    releaseNotes: formatReleaseNotes(auto.info.releaseNotes || auto.info.releaseNote),
     source: "auto",
     status:
       auto.status === "downloading"
@@ -205,6 +222,7 @@ function applyManualUpdateInfo(release) {
     version: latest,
     tag: release.tag,
     name: release.name,
+    releaseNotes: formatReleaseNotes(release.body),
     source: "manual",
     status: "available",
     downloadUrl: release.downloadUrl,
@@ -289,25 +307,373 @@ function getUpdatePayload() {
     downloadUrl: updateInfo.downloadUrl,
     downloadName: updateInfo.downloadName,
     htmlUrl: updateInfo.htmlUrl,
+    releaseNotes: updateInfo.releaseNotes || null,
     autoUpdaterEnabled: isAutoUpdaterEnabled(),
     dismissed: settings.updateDismissedVersion === updateInfo.version,
   };
 }
 
-async function checkForUpdates({ notify = false, force = false } = {}) {
-  if (!settings.checkForUpdates && !force) return;
-  if (updateCheckInFlight) return;
+function formatReleaseNotes(raw) {
+  if (!raw || typeof raw !== "string") return "";
+  const text = raw.replace(/\r\n/g, "\n").trim();
+  if (!text) return "";
+  const max = 380;
+  if (text.length <= max) return text;
+  return `${text.slice(0, max).trim()}…`;
+}
 
-  const now = Date.now();
-  if (
-    !force &&
-    settings.updateLastCheckAt &&
-    now - settings.updateLastCheckAt < UPDATE_CHECK_INTERVAL_MS
-  ) {
+function getUpdateChannel() {
+  if (!settings.checkForUpdates) return "off";
+  if (!app.isPackaged) return "manual";
+  if (updateInfo?.source === "auto") return "auto";
+  if (updateInfo?.source === "manual") return "manual";
+  return updateLastCheckChannel;
+}
+
+function getUpdateStatePayload() {
+  const base = {
+    currentVersion: pkg.version,
+    lastCheckedAt: settings.updateLastCheckAt || null,
+    checking: updateCheckInFlight,
+    autoUpdaterEnabled: isAutoUpdaterEnabled(),
+    channel: getUpdateChannel(),
+  };
+
+  if (updateCheckInFlight) {
+    return { ...base, phase: "checking" };
+  }
+
+  const available = getUpdatePayload();
+  if (available && !available.dismissed) {
+    const phase =
+      available.status === "downloading"
+        ? "downloading"
+        : available.status === "downloaded"
+          ? "downloaded"
+          : "available";
+    return { ...base, phase, ...available };
+  }
+
+  if (updateLastError) {
+    return { ...base, phase: "error", error: updateLastError };
+  }
+
+  if (settings.updateLastCheckAt) {
+    return { ...base, phase: "up_to_date" };
+  }
+
+  return { ...base, phase: "idle" };
+}
+
+function buildUpdateDialogDetail(tr) {
+  const parts = [
+    tr.t("settings.updateDialogCurrent", { version: pkg.version }),
+    tr.t("settings.updateDialogLatest", { version: updateInfo.version }),
+  ];
+  if (updateInfo.downloadName) {
+    parts.push(tr.t("settings.updateAsset", { name: updateInfo.downloadName }));
+  }
+  if (updateInfo.source === "auto" && isAutoUpdaterEnabled()) {
+    if (updateInfo.status === "downloaded") {
+      parts.push(tr.t("settings.updateHintReady"));
+    } else {
+      parts.push(tr.t("settings.updateHintAuto"));
+    }
+  } else {
+    parts.push(tr.t("settings.updateHintManual"));
+  }
+  if (updateInfo.releaseNotes) {
+    parts.push(updateInfo.releaseNotes);
+  }
+  return parts.join("\n\n");
+}
+
+function useInAppUpdateDialog() {
+  return process.platform === "darwin";
+}
+
+function ensureSettingsVisible() {
+  return new Promise((resolve) => {
+    if (settingsWindow && !settingsWindow.isDestroyed()) {
+      settingsWindow.show();
+      settingsWindow.focus();
+      resolve();
+      return;
+    }
+    openSettings();
+    const win = settingsWindow;
+    if (!win) {
+      resolve();
+      return;
+    }
+    if (win.isVisible()) {
+      resolve();
+      return;
+    }
+    win.once("ready-to-show", () => resolve());
+    window.setTimeout(resolve, 4000);
+  });
+}
+
+function buildUpdateDialogPayload() {
+  const tr = getTranslator();
+  const hasUpdate =
+    updateInfo?.version && settings.updateDismissedVersion !== updateInfo.version;
+
+  if (hasUpdate) {
+    if (updateInfo.status === "downloading") {
+      return { kind: "downloading" };
+    }
+
+    const isReady = updateInfo.status === "downloaded";
+    const isAuto = updateInfo.source === "auto" && isAutoUpdaterEnabled();
+    /** @type {{ id: string, label: string, primary?: boolean }[]} */
+    const actions = [];
+
+    if (isReady) {
+      actions.push({
+        id: "install",
+        label: tr.t("settings.updateInstall"),
+        primary: true,
+      });
+    } else if (isAuto) {
+      actions.push({
+        id: "download",
+        label: tr.t("settings.updateDownloadInApp"),
+        primary: true,
+      });
+      actions.push({ id: "releases", label: tr.t("settings.updateOpenReleases") });
+    } else {
+      actions.push({
+        id: "download",
+        label: tr.t("settings.updateDownload"),
+        primary: true,
+      });
+      actions.push({ id: "releases", label: tr.t("settings.updateViewRelease") });
+    }
+    actions.push({ id: "later", label: tr.t("settings.updateLater") });
+
+    return {
+      kind: isReady ? "ready" : "available",
+      title: isReady
+        ? tr.t("settings.updateReadyTitle", { version: updateInfo.version })
+        : tr.t("settings.updateAvailableTitle", { version: updateInfo.version }),
+      detail: isReady ? tr.t("settings.updateReadyDetail") : buildUpdateDialogDetail(tr),
+      actions,
+    };
+  }
+
+  if (updateLastError) {
+    return {
+      kind: "error",
+      title: tr.t("settings.updateErrorTitle"),
+      detail: updateLastError,
+      actions: [
+        { id: "retry", label: tr.t("settings.updateRetry"), primary: true },
+        { id: "ok", label: tr.t("settings.updateDialogOk") },
+      ],
+    };
+  }
+
+  return {
+    kind: "up_to_date",
+    title: tr.t("settings.updateUpToDateTitle"),
+    detail: tr.t("settings.updateUpToDateDetail", { version: pkg.version }),
+    actions: [{ id: "ok", label: tr.t("settings.updateDialogOk"), primary: true }],
+  };
+}
+
+function closeUpdatePromptWindow() {
+  if (updatePromptWindow && !updatePromptWindow.isDestroyed()) {
+    updatePromptWindow.close();
+  }
+  updatePromptWindow = null;
+}
+
+function isCompactUpdateDialog(payload) {
+  return (
+    payload.actions?.length === 1 && ["ok", "retry"].includes(payload.actions[0].id)
+  );
+}
+
+async function openUpdatePromptWindow(payload) {
+  closeUpdatePromptWindow();
+  const tr = getTranslator();
+  const height = payload.detail && payload.detail.length > 160 ? 360 : 300;
+
+  updatePromptWindow = new BrowserWindow({
+    width: 360,
+    height,
+    resizable: false,
+    minimizable: false,
+    maximizable: false,
+    fullscreenable: false,
+    show: false,
+    backgroundColor: "#0f1524",
+    title: payload.title || tr.t("settings.updateDialogTitle"),
+    icon: getAppIconPath(),
+    autoHideMenuBar: true,
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: false,
+    },
+  });
+
+  updatePromptWindow.on("closed", () => {
+    updatePromptWindow = null;
+  });
+
+  await updatePromptWindow.loadFile(path.join(__dirname, "src", "update-dialog.html"));
+  updatePromptWindow.once("ready-to-show", () => {
+    if (updatePromptWindow && !updatePromptWindow.isDestroyed()) {
+      updatePromptWindow.webContents.send("update-dialog", payload);
+      updatePromptWindow.show();
+    }
+  });
+}
+
+async function presentUpdateDialog(payload, { compact = false } = {}) {
+  if (payload.kind === "downloading") {
+    openSettings();
     return;
   }
 
+  const preferCompact =
+    compact || (useInAppUpdateDialog() && isCompactUpdateDialog(payload));
+
+  if (useInAppUpdateDialog() && preferCompact) {
+    await openUpdatePromptWindow(payload);
+    return;
+  }
+
+  if (settingsWindow && !settingsWindow.isDestroyed()) {
+    settingsWindow.show();
+    settingsWindow.focus();
+    settingsWindow.webContents.send("update-dialog", payload);
+    return;
+  }
+
+  await ensureSettingsVisible();
+  if (settingsWindow && !settingsWindow.isDestroyed()) {
+    settingsWindow.webContents.send("update-dialog", payload);
+  }
+}
+
+async function runNativeUpdateDialog(payload) {
+  const tr = getTranslator();
+  const parent =
+    settingsWindow && !settingsWindow.isDestroyed() ? settingsWindow : undefined;
+
+  if (payload.kind === "downloading") {
+    openSettings();
+    return;
+  }
+
+  const dialogType = payload.kind === "error" ? "error" : "info";
+  const { response } = await dialog.showMessageBox(
+    parent ?? null,
+    withAppDialogIcon({
+      type: dialogType,
+      title: tr.t("settings.updateDialogTitle"),
+      message: payload.title,
+      detail: payload.detail,
+      buttons: payload.actions.map((a) => a.label),
+      defaultId: 0,
+      cancelId: payload.actions.length - 1,
+      noLink: true,
+    }),
+  );
+
+  const picked = payload.actions[response]?.id;
+  await handleUpdateDialogAction(picked);
+}
+
+async function handleUpdateDialogAction(action) {
+  if (action === "retry") {
+    closeUpdatePromptWindow();
+    await checkForUpdates({ notify: false, force: true, showDialog: true });
+    return;
+  }
+  if (action === "ok") {
+    closeUpdatePromptWindow();
+    return;
+  }
+  if (action === "install" || action === "download") {
+    closeUpdatePromptWindow();
+    await handleUpdateAction();
+    return;
+  }
+  if (action === "releases") {
+    closeUpdatePromptWindow();
+    shell.openExternal(updateInfo?.htmlUrl || RELEASES_LATEST_URL).catch((err) => {
+      console.error("open releases failed", err);
+    });
+    return;
+  }
+  if (action === "later" && updateInfo?.version) {
+    closeUpdatePromptWindow();
+    settings.updateDismissedVersion = updateInfo.version;
+    saveSettings();
+    notifySettingsUi();
+    refreshTray();
+  }
+}
+
+async function showUpdateResultDialog({ compact = false } = {}) {
+  const payload = buildUpdateDialogPayload();
+  if (useInAppUpdateDialog()) {
+    await presentUpdateDialog(payload, { compact });
+    return;
+  }
+  await runNativeUpdateDialog(payload);
+}
+
+async function checkForUpdates({
+  notify = false,
+  force = false,
+  showDialog = false,
+  dialogFromTray = false,
+} = {}) {
+  if (!settings.checkForUpdates && !force) return getUpdateStatePayload();
+  if (updateCheckInFlight) {
+    if (showDialog) {
+      const tr = getTranslator();
+      const payload = {
+        kind: "checking",
+        title: tr.t("settings.updateCheckingTitle"),
+        detail: tr.t("settings.updateCheckingDetail"),
+        actions: [{ id: "ok", label: tr.t("settings.updateDialogOk"), primary: true }],
+      };
+      if (useInAppUpdateDialog()) {
+        await presentUpdateDialog(payload, { compact: dialogFromTray });
+      } else {
+        await runNativeUpdateDialog(payload);
+      }
+    }
+    return getUpdateStatePayload();
+  }
+
+  const now = Date.now();
+  const skipNetwork =
+    !force &&
+    settings.updateLastCheckAt &&
+    now - settings.updateLastCheckAt < UPDATE_CHECK_INTERVAL_MS;
+
+  if (skipNetwork) {
+    notifySettingsUi();
+    refreshTray();
+    if (showDialog) {
+      await showUpdateResultDialog({ compact: dialogFromTray });
+    }
+    return getUpdateStatePayload();
+  }
+
   updateCheckInFlight = true;
+  updateLastError = null;
+  notifySettingsUi();
+
   try {
     let found = false;
     if (isAutoUpdaterEnabled()) {
@@ -315,32 +681,103 @@ async function checkForUpdates({ notify = false, force = false } = {}) {
         found = await checkAutoUpdates({ notify });
       } catch (err) {
         console.error("auto update check failed", err);
+        updateLastError = err?.message || String(err);
       }
     }
 
-    if (!found) {
-      found = await checkManualUpdates({ notify });
+    if (!found && !updateLastError) {
+      try {
+        found = await checkManualUpdates({ notify });
+      } catch (err) {
+        console.error("manual update check failed", err);
+        updateLastError = err?.message || String(err);
+      }
     }
 
-    if (!found) {
+    if (found && updateInfo?.source === "auto") {
+      updateLastCheckChannel = "auto";
+      updateLastError = null;
+    } else if (found && updateInfo?.source === "manual") {
+      updateLastCheckChannel = "manual";
+      updateLastError = null;
+    } else if (!updateLastError) {
       updateInfo = null;
+      updateLastCheckChannel = isAutoUpdaterEnabled() ? "auto" : "manual";
     }
 
     settings.updateLastCheckAt = now;
     saveSettings();
     notifySettingsUi();
     refreshTray();
+
+    if (showDialog) {
+      await showUpdateResultDialog({ compact: dialogFromTray });
+    }
   } catch (err) {
     console.error("update check failed", err);
+    updateLastError = err?.message || String(err);
+    notifySettingsUi();
+    if (showDialog) {
+      await showUpdateResultDialog();
+    }
   } finally {
     updateCheckInFlight = false;
+    notifySettingsUi();
+    refreshTray();
   }
+
+  return getUpdateStatePayload();
+}
+
+function syncAutoUpdaterPreferences() {
+  applyAutoUpdaterPreferences({
+    autoDownload:
+      !!settings.checkForUpdates && settings.autoDownloadUpdates !== false,
+    autoInstallOnAppQuit: !!settings.autoInstallOnQuit,
+  });
+}
+
+async function promptInstallReadyUpdate() {
+  if (!updateInfo?.version || updateInfo.source !== "auto") return;
+  if (updateInfo.status !== "downloaded") return;
+  if (settings.updateDismissedVersion === updateInfo.version) return;
+  if (updateInstallPromptedVersion === updateInfo.version) return;
+
+  updateInstallPromptedVersion = updateInfo.version;
+  const tr = getTranslator();
+
+  showNotification({
+    title: tr.t("settings.updateReadyNotifyTitle"),
+    body: tr.t("settings.updateReadyNotifyBody", { version: updateInfo.version }),
+    silent: false,
+  });
+
+  const payload = {
+    kind: "ready",
+    title: tr.t("settings.updateReadyTitle", { version: updateInfo.version }),
+    detail: tr.t("settings.updateReadyDetail"),
+    actions: [
+      { id: "install", label: tr.t("settings.updateInstall"), primary: true },
+      { id: "later", label: tr.t("settings.updateLater") },
+    ],
+  };
+
+  if (useInAppUpdateDialog()) {
+    await presentUpdateDialog(payload);
+    return;
+  }
+
+  await runNativeUpdateDialog(payload);
 }
 
 function onAutoUpdaterStateChanged() {
+  const prevStatus = updateInfo?.status;
   if (syncUpdateFromAutoState()) {
     notifySettingsUi();
     refreshTray();
+    if (updateInfo?.status === "downloaded" && prevStatus !== "downloaded") {
+      promptInstallReadyUpdate();
+    }
   }
 }
 
@@ -647,6 +1084,7 @@ function openSettings() {
     show: false,
     backgroundColor: "#1a1a1a",
     title: tr.t("app.settingsTitle"),
+    icon: getAppIconPath(),
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
@@ -679,6 +1117,7 @@ function notifySettingsUi() {
       appVersion: pkg.version,
       releasesUrl: RELEASES_URL,
       launchAtLoginSupported: canUseLoginItemSettings(),
+      updateState: getUpdateStatePayload(),
       update: getUpdatePayload(),
     });
   }
@@ -711,8 +1150,8 @@ app.on("second-instance", () => {
 app.whenReady().then(() => {
   setAppUserModelId();
   loadSettings();
-  configureAutoUpdater();
   onAutoUpdateStateChange(onAutoUpdaterStateChanged);
+  syncAutoUpdaterPreferences();
   applyLaunchAtLogin(settings.launchAtLogin);
   createTray();
   startTick();
@@ -748,6 +1187,7 @@ ipcMain.handle("get-settings", () => {
     appVersion: pkg.version,
     releasesUrl: RELEASES_URL,
     launchAtLoginSupported: canUseLoginItemSettings(),
+    updateState: getUpdateStatePayload(),
     update: getUpdatePayload(),
   };
 });
@@ -781,8 +1221,12 @@ ipcMain.handle("dismiss-update", () => {
 });
 
 ipcMain.handle("check-for-updates", async () => {
-  await checkForUpdates({ notify: false, force: true });
-  return getUpdatePayload();
+  return checkForUpdates({ notify: false, force: true, showDialog: true, dialogFromTray: false });
+});
+
+ipcMain.handle("update-dialog-action", async (_e, action) => {
+  await handleUpdateDialogAction(action);
+  return true;
 });
 
 ipcMain.handle("save-settings", (_e, next) => {
@@ -797,6 +1241,8 @@ ipcMain.handle("save-settings", (_e, next) => {
   }
 
   if (!onBreak) resetWorkTimer();
+
+  syncAutoUpdaterPreferences();
 
   if (settings.checkForUpdates) {
     checkForUpdates({ notify: false, force: true });

@@ -1,6 +1,6 @@
 {
   "name": "cat-break-desktop",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Eye break reminders with fullscreen overlay and cat mascot (macOS, Windows, Linux)",
   "main": "main.js",
   "scripts": {
@@ -44,6 +44,7 @@
   "build": {
     "appId": "com.catbreak.desktop",
     "productName": "Cat Break",
+    "artifactName": "Cat-Break-${version}-${arch}.${ext}",
     "files": [
       "main.js",
       "preload.js",
@@ -85,6 +86,8 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
       "installerLanguages": [
         "ru",
         "en"

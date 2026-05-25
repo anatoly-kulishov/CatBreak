@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.0.6] - 2026-05-21
+
+### Added
+
+- Settings: update status line, manual check button, background download and install-on-quit options
+- macOS: in-app update dialogs with app icon; compact update prompt window from tray (without opening full Settings)
+- Windows: multi-size `.ico`, window/taskbar/installer icons; release artifact name `Cat-Break-*`
+
+### Changed
+
+- Update flow: notifications when download completes, restart prompt, retry on check errors, release notes in dialog (GitHub body)
+- Update channel hint in UI (in-app updater vs GitHub Releases)
+
 ## [1.0.5] - 2026-05-21
 
 ### Changed
