@@ -126,6 +126,22 @@ jobs:
       - run: npm ci
       - run: npm run prepare
 
+      - name: Guard against stale workflow re-run
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          if (-not (Test-Path scripts/upload-windows-release.ps1)) {
+            Write-Error @"
+          This job is using an old checkout (missing upload-windows-release.ps1).
+          Do NOT use Re-run failed jobs on an old Release run.
+          Use either:
+            - Actions > Release > Run workflow (rebuild_only=true, version=1.0.6), or
+            - Actions > Release Windows assets > Run workflow
+          "@
+          }
+          $ref = git rev-parse --short HEAD
+          Write-Host "Building Windows from commit $ref"
+
       - name: Build Windows installers
         if: matrix.os == 'windows-latest'
         run: npx electron-builder --win --publish never

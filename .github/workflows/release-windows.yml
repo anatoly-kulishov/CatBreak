@@ -1,0 +1,44 @@
+# Rebuild and upload Windows installers only (always from main).
+# Use when the main Release workflow failed on windows-latest.
+name: Release Windows assets
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "GitHub Release tag (e.g. v1.0.6)"
+        required: true
+        default: v1.0.6
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-windows-${{ inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - run: npm ci
+      - run: npm run prepare
+
+      - name: Build Windows installers
+        run: npx electron-builder --win --publish never
+
+      - name: Upload Windows release assets
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./scripts/upload-windows-release.ps1 -Tag ${{ inputs.tag }}
