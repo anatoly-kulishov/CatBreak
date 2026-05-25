@@ -214,7 +214,8 @@ npm run dist:linux
 1. Версия в `package.json` и секция в `CHANGELOG.md` совпадают.
 2. Код в `main`, затем один из вариантов:
    - **Тег:** `git tag v1.0.6 && git push origin v1.0.6` → workflow `release.yml` (notes из CHANGELOG + сборка mac/win/linux + upload).
-   - **Кнопка:** GitHub → Actions → Release → Run workflow → version `1.0.6`, ref `main` → создаёт тег и запускает тот же pipeline.
+   - **Кнопка:** GitHub → Actions → Release → Run workflow → version `1.0.6` (как в `package.json`, не `1.0.0`), ref `main` → создаёт тег и запускает pipeline.
+   - **Пересборка:** если тег уже есть — Run workflow с `rebuild_only=true` и той же version.
 3. Дождаться зелёных job **release-notes** и три **build**. Артефакты и `latest-*.yml` появятся на Releases автоматически.
 
 Локально `npm run dist:*` — только для проверки; на GitHub заливать вручную не нужно.

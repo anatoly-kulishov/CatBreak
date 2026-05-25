@@ -15,17 +15,27 @@ on:
         required: false
         default: main
         type: string
+      rebuild_only:
+        description: "Rebuild artifacts for an existing tag (do not create a new tag)"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-${{ github.event_name == 'workflow_dispatch' && inputs.rebuild_only && format('v{0}', inputs.version) || github.ref }}
   cancel-in-progress: false
+
+env:
+  RELEASE_TAG: >-
+    ${{ github.event_name == 'push' && github.ref_name
+        || format('v{0}', inputs.version) }}
 
 jobs:
   tag:
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' && !inputs.rebuild_only
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -39,7 +49,7 @@ jobs:
           INPUT_VERSION="${{ inputs.version }}"
           INPUT_VERSION="${INPUT_VERSION#v}"
           if [ "$PKG_VERSION" != "$INPUT_VERSION" ]; then
-            echo "package.json version ($PKG_VERSION) != input ($INPUT_VERSION)"
+            echo "::error::package.json is $PKG_VERSION but you entered $INPUT_VERSION. Use version $PKG_VERSION."
             exit 1
           fi
           echo "TAG=v$PKG_VERSION" >> "$GITHUB_ENV"
@@ -47,7 +57,14 @@ jobs:
       - name: Create and push tag
         run: |
           if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "Tag $TAG already exists on $(git rev-parse "$TAG")"
+            EXISTING=$(git rev-parse "$TAG")
+            HEAD_SHA=$(git rev-parse HEAD)
+            echo "Tag $TAG already exists at $EXISTING (HEAD is $HEAD_SHA)."
+            if [ "$EXISTING" = "$HEAD_SHA" ]; then
+              echo "::notice::Tag points to this commit. Run workflow again with rebuild_only=true to upload artifacts."
+            else
+              echo "::error::Tag $TAG points to a different commit. Delete the tag on GitHub or pick another version."
+            fi
             exit 1
           fi
           git config user.name "github-actions[bot]"
@@ -56,26 +73,31 @@ jobs:
           git push origin "$TAG"
 
   release-notes:
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.rebuild_only)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
 
       - name: Write release notes from CHANGELOG
-        run: node scripts/release-notes-from-changelog.js "$GITHUB_REF_NAME" > release-notes.md
+        run: node scripts/release-notes-from-changelog.js "$RELEASE_TAG" > release-notes.md
+        env:
+          RELEASE_TAG: ${{ env.RELEASE_TAG }}
 
       - name: Create or update GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ env.RELEASE_TAG }}
         run: |
-          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release edit "$GITHUB_REF_NAME" --notes-file release-notes.md
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release edit "$RELEASE_TAG" --notes-file release-notes.md
           else
-            gh release create "$GITHUB_REF_NAME" --title "Cat Break ${GITHUB_REF_NAME#v}" --notes-file release-notes.md
+            gh release create "$RELEASE_TAG" --title "Cat Break ${RELEASE_TAG#v}" --notes-file release-notes.md
           fi
 
   build:
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.rebuild_only)
     needs: release-notes
     strategy:
       fail-fast: false
@@ -90,6 +112,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
 
       - uses: actions/setup-node@v4
         with:
@@ -103,9 +127,12 @@ jobs:
         run: npx electron-builder ${{ matrix.args }} --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REF: refs/tags/${{ env.RELEASE_TAG }}
+          GITHUB_REF_NAME: ${{ env.RELEASE_TAG }}
 
       - name: Upload macOS install notes
         if: matrix.os == 'macos-latest'
-        run: gh release upload "$GITHUB_REF_NAME" docs/en/MACOS_INSTALL.md --clobber
+        run: gh release upload "$RELEASE_TAG" docs/en/MACOS_INSTALL.md --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ env.RELEASE_TAG }}
