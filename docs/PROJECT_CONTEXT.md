@@ -218,7 +218,7 @@ npm run dist:linux
    - **Пересборка:** если тег уже есть — Run workflow с `rebuild_only=true` и той же version.
 3. Дождаться зелёных job **release-notes** и три **build**. Артефакты и `latest-*.yml` появятся на Releases автоматически.
 
-При **Request timed out** на Windows: Re-run failed jobs или `rebuild_only` — в `package.json` для publish задан `timeout` 15 мин, в workflow до 3 попыток загрузки.
+При **Request timed out** на Windows: **Release → Run workflow** → `1.0.6`, **rebuild_only** (сборка с `main`, заливка через `gh` по файлам). Тег `v1.0.6` должен указывать на коммит с кодом приложения; CI-фиксы подхватываются через `rebuild_only` + `ref: main`.
 
 Локально `npm run dist:*` — только для проверки; на GitHub заливать вручную не нужно.
 

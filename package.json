@@ -71,7 +71,12 @@
         {
           "target": "nsis",
           "arch": [
-            "x64",
+            "x64"
+          ]
+        },
+        {
+          "target": "nsis",
+          "arch": [
             "arm64"
           ]
         },
@@ -112,7 +117,7 @@
       "owner": "anatoly-kulishov",
       "repo": "CatBreak",
       "releaseType": "release",
-      "timeout": 900000
+      "timeout": 1800000
     }
   }
 }
