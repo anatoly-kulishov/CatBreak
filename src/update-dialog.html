@@ -11,19 +11,19 @@
     <link rel="stylesheet" href="update-dialog.css" />
   </head>
   <body>
-    <div class="update-modal__panel update-modal__panel--solo" role="dialog" aria-modal="true">
+    <main class="update-prompt" role="alertdialog" aria-labelledby="update-prompt-title">
       <img
-        class="update-modal__icon"
+        class="update-prompt__icon"
         src="../assets/app-icon-1024.png"
         width="72"
         height="72"
         alt=""
         decoding="async"
       />
-      <h1 id="update-modal-title" class="update-modal__title"></h1>
-      <p id="update-modal-detail" class="update-modal__detail"></p>
-      <div id="update-modal-actions" class="update-modal__actions"></div>
-    </div>
+      <h1 id="update-prompt-title" class="update-prompt__title"></h1>
+      <p id="update-prompt-detail" class="update-prompt__detail"></p>
+      <div id="update-prompt-actions" class="update-prompt__actions"></div>
+    </main>
     <script src="update-dialog.js"></script>
   </body>
 </html>

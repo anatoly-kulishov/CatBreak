@@ -502,15 +502,15 @@ async function openUpdatePromptWindow(payload) {
   const height = payload.detail && payload.detail.length > 160 ? 360 : 300;
 
   updatePromptWindow = new BrowserWindow({
-    width: 400,
+    width: 360,
     height,
     resizable: false,
     minimizable: false,
     maximizable: false,
     fullscreenable: false,
     show: false,
-    backgroundColor: "#1a1a1a",
-    title: tr.t("settings.updateDialogTitle"),
+    backgroundColor: "#0f1524",
+    title: payload.title || tr.t("settings.updateDialogTitle"),
     icon: getAppIconPath(),
     autoHideMenuBar: true,
     webPreferences: {
@@ -526,9 +526,9 @@ async function openUpdatePromptWindow(payload) {
   });
 
   await updatePromptWindow.loadFile(path.join(__dirname, "src", "update-dialog.html"));
-  updatePromptWindow.webContents.send("update-dialog", payload);
   updatePromptWindow.once("ready-to-show", () => {
     if (updatePromptWindow && !updatePromptWindow.isDestroyed()) {
+      updatePromptWindow.webContents.send("update-dialog", payload);
       updatePromptWindow.show();
     }
   });
@@ -540,18 +540,18 @@ async function presentUpdateDialog(payload, { compact = false } = {}) {
     return;
   }
 
-  const useCompact =
+  const preferCompact =
     compact || (useInAppUpdateDialog() && isCompactUpdateDialog(payload));
+
+  if (useInAppUpdateDialog() && preferCompact) {
+    await openUpdatePromptWindow(payload);
+    return;
+  }
 
   if (settingsWindow && !settingsWindow.isDestroyed()) {
     settingsWindow.show();
     settingsWindow.focus();
     settingsWindow.webContents.send("update-dialog", payload);
-    return;
-  }
-
-  if (useInAppUpdateDialog() && useCompact) {
-    await openUpdatePromptWindow(payload);
     return;
   }
 
@@ -606,6 +606,7 @@ async function handleUpdateDialogAction(action) {
     return;
   }
   if (action === "releases") {
+    closeUpdatePromptWindow();
     shell.openExternal(updateInfo?.htmlUrl || RELEASES_LATEST_URL).catch((err) => {
       console.error("open releases failed", err);
     });

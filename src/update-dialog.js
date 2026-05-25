@@ -1,7 +1,7 @@
-function showUpdateModal(payload) {
-  const title = document.getElementById("update-modal-title");
-  const detail = document.getElementById("update-modal-detail");
-  const actionsEl = document.getElementById("update-modal-actions");
+function showUpdatePrompt(payload) {
+  const title = document.getElementById("update-prompt-title");
+  const detail = document.getElementById("update-prompt-detail");
+  const actionsEl = document.getElementById("update-prompt-actions");
   if (!title || !detail || !actionsEl || !payload) return;
 
   title.textContent = payload.title || "";
@@ -13,8 +13,8 @@ function showUpdateModal(payload) {
     btn.type = "button";
     btn.textContent = action.label;
     btn.className = action.primary
-      ? "update-modal__btn update-modal__btn--primary"
-      : "update-modal__btn";
+      ? "update-prompt__btn update-prompt__btn--primary"
+      : "update-prompt__btn";
     btn.addEventListener("click", async () => {
       try {
         await window.catBreak?.updateDialogAction?.(action.id);
@@ -27,5 +27,5 @@ function showUpdateModal(payload) {
 }
 
 window.catBreak?.onUpdateDialog?.((payload) => {
-  showUpdateModal(payload);
+  showUpdatePrompt(payload);
 });
