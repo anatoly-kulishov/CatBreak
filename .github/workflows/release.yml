@@ -4,12 +4,79 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (e.g. 1.0.6, must match package.json)"
+        required: true
+        type: string
+      ref:
+        description: "Branch or commit to tag (default main)"
+        required: false
+        default: main
+        type: string
 
 permissions:
   contents: write
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
+  tag:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+
+      - name: Verify package.json version
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          INPUT_VERSION="${{ inputs.version }}"
+          INPUT_VERSION="${INPUT_VERSION#v}"
+          if [ "$PKG_VERSION" != "$INPUT_VERSION" ]; then
+            echo "package.json version ($PKG_VERSION) != input ($INPUT_VERSION)"
+            exit 1
+          fi
+          echo "TAG=v$PKG_VERSION" >> "$GITHUB_ENV"
+
+      - name: Create and push tag
+        run: |
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists on $(git rev-parse "$TAG")"
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
+
+  release-notes:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Write release notes from CHANGELOG
+        run: node scripts/release-notes-from-changelog.js "$GITHUB_REF_NAME" > release-notes.md
+
+      - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release edit "$GITHUB_REF_NAME" --notes-file release-notes.md
+          else
+            gh release create "$GITHUB_REF_NAME" --title "Cat Break ${GITHUB_REF_NAME#v}" --notes-file release-notes.md
+          fi
+
   build:
+    if: github.event_name == 'push'
+    needs: release-notes
     strategy:
       fail-fast: false
       matrix:
@@ -31,6 +98,7 @@ jobs:
 
       - run: npm ci
       - run: npm run prepare
+
       - name: Build and publish to GitHub Releases
         run: npx electron-builder ${{ matrix.args }} --publish always
         env:

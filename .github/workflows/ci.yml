@@ -29,3 +29,4 @@ jobs:
       - run: node --check src/update-dialog.js
       - run: node --check preload.js
       - run: node --check landing/download.js
+      - run: node --check scripts/release-notes-from-changelog.js

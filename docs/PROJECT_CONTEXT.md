@@ -209,6 +209,16 @@ npm run dist:linux
 
 Артефакты: `dist/`. Релизы — **GitHub Releases** (лендинг тянет `/releases/latest` API).
 
+**Публикация релиза (без ручной загрузки файлов):**
+
+1. Версия в `package.json` и секция в `CHANGELOG.md` совпадают.
+2. Код в `main`, затем один из вариантов:
+   - **Тег:** `git tag v1.0.6 && git push origin v1.0.6` → workflow `release.yml` (notes из CHANGELOG + сборка mac/win/linux + upload).
+   - **Кнопка:** GitHub → Actions → Release → Run workflow → version `1.0.6`, ref `main` → создаёт тег и запускает тот же pipeline.
+3. Дождаться зелёных job **release-notes** и три **build**. Артефакты и `latest-*.yml` появятся на Releases автоматически.
+
+Локально `npm run dist:*` — только для проверки; на GitHub заливать вручную не нужно.
+
 CI (`ci.yml`): `npm ci`, `prepare`, `node --check` на main.js, lib/*, preload, landing/download.js.
 
 ---
@@ -248,6 +258,7 @@ CI (`ci.yml`): `npm ci`, `prepare`, `node --check` на main.js, lib/*, preload,
 | Лендинг / скачивание | `landing/*`, `docs/LANDING_PAGES.md` |
 | Установка пользователям | `docs/en/*`, `docs/ru/*` |
 | CI | `.github/workflows/ci.yml` |
+| Релиз на GitHub | `.github/workflows/release.yml`, `scripts/release-notes-from-changelog.js` |
 
 ---
 
