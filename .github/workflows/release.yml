@@ -110,6 +110,7 @@ jobs:
           - os: ubuntu-latest
             args: --linux
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
         with:
@@ -124,7 +125,12 @@ jobs:
       - run: npm run prepare
 
       - name: Build and publish to GitHub Releases
-        run: npx electron-builder ${{ matrix.args }} --publish always
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 75
+          max_attempts: 3
+          retry_wait_seconds: 45
+          command: npx electron-builder ${{ matrix.args }} --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REF: refs/tags/${{ env.RELEASE_TAG }}

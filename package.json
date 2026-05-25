@@ -111,7 +111,8 @@
       "provider": "github",
       "owner": "anatoly-kulishov",
       "repo": "CatBreak",
-      "releaseType": "release"
+      "releaseType": "release",
+      "timeout": 900000
     }
   }
 }
