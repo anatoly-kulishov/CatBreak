@@ -192,9 +192,13 @@ async function main() {
   console.log("Wrote", landingIconAsset);
 
   const pngToIco = require("png-to-ico");
-  const buf = await pngToIco(pngPath);
+  const icoSizes = [16, 24, 32, 48, 64, 128, 256];
+  const icoPngs = await Promise.all(
+    icoSizes.map((size) => sharp(appMaster).resize(size, size, { fit: "cover" }).png().toBuffer()),
+  );
+  const buf = await pngToIco(icoPngs);
   fs.writeFileSync(icoPath, buf);
-  console.log("Wrote", icoPath);
+  console.log("Wrote", icoPath, `(${icoSizes.join(", ")}px)`);
 }
 
 main().catch((err) => {

@@ -5,12 +5,34 @@
     <meta name="color-scheme" content="dark" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'"
+      content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self'"
     />
     <title>Settings</title>
     <link rel="stylesheet" href="settings.css" />
   </head>
   <body>
+    <div id="update-modal" class="update-modal" hidden>
+      <div class="update-modal__backdrop" data-update-modal-dismiss></div>
+      <div
+        class="update-modal__panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="update-modal-title"
+      >
+        <img
+          class="update-modal__icon"
+          src="../assets/app-icon-1024.png"
+          width="72"
+          height="72"
+          alt=""
+          decoding="async"
+        />
+        <h2 id="update-modal-title" class="update-modal__title"></h2>
+        <p id="update-modal-detail" class="update-modal__detail"></p>
+        <div id="update-modal-actions" class="update-modal__actions"></div>
+      </div>
+    </div>
+
     <div id="update-banner" class="update-banner" hidden>
       <p id="update-banner-title" class="update-banner__title"></p>
       <p id="update-banner-hint" class="update-banner__hint"></p>
@@ -37,6 +59,17 @@
       <label class="row">
         <input id="checkForUpdates" type="checkbox" />
         <span data-i18n="settings.checkForUpdates"></span>
+      </label>
+      <label id="autoDownloadUpdatesRow" class="row row--nested">
+        <input id="autoDownloadUpdates" type="checkbox" />
+        <span data-i18n="settings.autoDownloadUpdates"></span>
+      </label>
+      <label id="autoInstallOnQuitRow" class="row row--nested">
+        <input id="autoInstallOnQuit" type="checkbox" />
+        <span>
+          <span data-i18n="settings.autoInstallOnQuit"></span>
+          <small class="note" data-i18n="settings.autoInstallOnQuitNote"></small>
+        </span>
       </label>
       <label class="field">
         <span class="field__label" data-i18n="settings.language"></span>
@@ -113,9 +146,13 @@
     <p id="status" class="status" role="status"></p>
 
     <footer class="meta">
-      <span id="app-version"></span>
-      ·
-      <a id="releases-link" href="#" target="_blank" rel="noopener noreferrer"></a>
+      <div class="meta__version-row">
+        <span id="app-version"></span>
+        ·
+        <a id="releases-link" href="#" target="_blank" rel="noopener noreferrer"></a>
+      </div>
+      <p id="update-status-line" class="update-status" role="status"></p>
+      <button type="button" id="check-updates-now" class="button-secondary meta__check-updates"></button>
     </footer>
 
     <script src="settings.js"></script>

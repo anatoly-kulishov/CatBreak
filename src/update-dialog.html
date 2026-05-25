@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="color-scheme" content="dark" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self'"
+    />
+    <title>Cat Break</title>
+    <link rel="stylesheet" href="update-dialog.css" />
+  </head>
+  <body>
+    <div class="update-modal__panel update-modal__panel--solo" role="dialog" aria-modal="true">
+      <img
+        class="update-modal__icon"
+        src="../assets/app-icon-1024.png"
+        width="72"
+        height="72"
+        alt=""
+        decoding="async"
+      />
+      <h1 id="update-modal-title" class="update-modal__title"></h1>
+      <p id="update-modal-detail" class="update-modal__detail"></p>
+      <div id="update-modal-actions" class="update-modal__actions"></div>
+    </div>
+    <script src="update-dialog.js"></script>
+  </body>
+</html>
