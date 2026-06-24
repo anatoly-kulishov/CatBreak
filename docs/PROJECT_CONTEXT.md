@@ -6,6 +6,7 @@
 
 | Документ | Зачем |
 |----------|--------|
+| [CHAT_HANDOFF.md](CHAT_HANDOFF.md) | Handoff чата: UX-решения, tray, npm, backlog |
 | [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) | Цвета, лендинг, иконки |
 | [LANDING_PAGES.md](LANDING_PAGES.md) | GitHub Pages, `#download-platform` |
 | [README.md](README.md) | Установка по платформам |
