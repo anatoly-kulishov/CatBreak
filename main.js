@@ -62,7 +62,16 @@ const DEFAULT_SETTINGS = {
   autoDownloadUpdates: true,
   autoInstallOnQuit: false,
   updateDismissedVersion: null,
+  updateLastCheckAt: null,
 };
+
+const SETTINGS_LIMITS = {
+  workMinutes: { min: 1, max: 480 },
+  breakMinutes: { min: 1, max: 60 },
+  idlePauseMinutes: { min: 1, max: 30 },
+};
+
+const VALID_LOCALES = new Set(["auto", "en", "ru"]);
 
 const UPDATE_CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
 const UPDATE_STARTUP_DELAY_MS = 8 * 1000;
@@ -107,20 +116,82 @@ function getTranslator() {
   return createTranslator(settings.locale);
 }
 
+function clampInt(value, min, max, fallback) {
+  const n = Number.parseInt(value, 10);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(max, Math.max(min, n));
+}
+
+/** Coerce/clamp known settings; drop unknown keys from renderer. */
+function normalizeSettings(partial = {}) {
+  const src = { ...DEFAULT_SETTINGS, ...partial };
+  const normalized = {
+    workMinutes: clampInt(
+      src.workMinutes,
+      SETTINGS_LIMITS.workMinutes.min,
+      SETTINGS_LIMITS.workMinutes.max,
+      DEFAULT_SETTINGS.workMinutes,
+    ),
+    breakMinutes: clampInt(
+      src.breakMinutes,
+      SETTINGS_LIMITS.breakMinutes.min,
+      SETTINGS_LIMITS.breakMinutes.max,
+      DEFAULT_SETTINGS.breakMinutes,
+    ),
+    idlePauseMinutes: clampInt(
+      src.idlePauseMinutes,
+      SETTINGS_LIMITS.idlePauseMinutes.min,
+      SETTINGS_LIMITS.idlePauseMinutes.max,
+      DEFAULT_SETTINGS.idlePauseMinutes,
+    ),
+    showExercises: !!src.showExercises,
+    strictBreak: !!src.strictBreak,
+    locale: VALID_LOCALES.has(src.locale) ? src.locale : DEFAULT_SETTINGS.locale,
+    notifyBeforeBreak: !!src.notifyBeforeBreak,
+    soundOnBreakEnd: !!src.soundOnBreakEnd,
+    launchAtLogin: !!src.launchAtLogin,
+    checkForUpdates: !!src.checkForUpdates,
+    autoDownloadUpdates: !!src.autoDownloadUpdates,
+    autoInstallOnQuit: !!src.autoInstallOnQuit,
+    updateDismissedVersion:
+      src.updateDismissedVersion == null || src.updateDismissedVersion === ""
+        ? null
+        : String(src.updateDismissedVersion),
+    updateLastCheckAt: null,
+  };
+
+  const checkedAt = Number(src.updateLastCheckAt);
+  if (Number.isFinite(checkedAt) && checkedAt > 0) {
+    normalized.updateLastCheckAt = checkedAt;
+  }
+
+  if (!normalized.checkForUpdates) {
+    normalized.autoDownloadUpdates = false;
+    normalized.autoInstallOnQuit = false;
+  }
+
+  return normalized;
+}
+
 function loadSettings() {
   isFirstRun = !fs.existsSync(SETTINGS_PATH);
   try {
     const raw = fs.readFileSync(SETTINGS_PATH, "utf8");
-    settings = { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+    settings = normalizeSettings(JSON.parse(raw));
   } catch {
-    settings = { ...DEFAULT_SETTINGS };
+    settings = normalizeSettings();
   }
   workSecondsLeft = settings.workMinutes * 60;
 }
 
 function saveSettings() {
-  fs.mkdirSync(path.dirname(SETTINGS_PATH), { recursive: true });
-  fs.writeFileSync(SETTINGS_PATH, JSON.stringify(settings, null, 2));
+  try {
+    fs.mkdirSync(path.dirname(SETTINGS_PATH), { recursive: true });
+    fs.writeFileSync(SETTINGS_PATH, JSON.stringify(settings, null, 2));
+  } catch (err) {
+    console.error("Failed to save settings:", err);
+    throw err;
+  }
 }
 
 function formatClock(totalSeconds) {
@@ -410,8 +481,11 @@ function ensureSettingsVisible() {
       resolve();
       return;
     }
-    win.once("ready-to-show", () => resolve());
-    window.setTimeout(resolve, 4000);
+    const fallback = setTimeout(resolve, 4000);
+    win.once("ready-to-show", () => {
+      clearTimeout(fallback);
+      resolve();
+    });
   });
 }
 
@@ -615,7 +689,11 @@ async function handleUpdateDialogAction(action) {
   if (action === "later" && updateInfo?.version) {
     closeUpdatePromptWindow();
     settings.updateDismissedVersion = updateInfo.version;
-    saveSettings();
+    try {
+      saveSettings();
+    } catch {
+      /* already logged */
+    }
     notifySettingsUi();
     refreshTray();
   }
@@ -706,7 +784,11 @@ async function checkForUpdates({
     }
 
     settings.updateLastCheckAt = now;
-    saveSettings();
+    try {
+      saveSettings();
+    } catch {
+      /* already logged */
+    }
     notifySettingsUi();
     refreshTray();
 
@@ -1213,7 +1295,11 @@ ipcMain.handle("install-update", () => {
 ipcMain.handle("dismiss-update", () => {
   if (updateInfo?.version) {
     settings.updateDismissedVersion = updateInfo.version;
-    saveSettings();
+    try {
+      saveSettings();
+    } catch {
+      /* already logged */
+    }
     notifySettingsUi();
     refreshTray();
   }
@@ -1231,7 +1317,8 @@ ipcMain.handle("update-dialog-action", async (_e, action) => {
 
 ipcMain.handle("save-settings", (_e, next) => {
   const prevLocale = settings.locale;
-  settings = { ...DEFAULT_SETTINGS, ...next };
+  // Merge over current settings so form payload can't wipe updateDismissedVersion / last check.
+  settings = normalizeSettings({ ...settings, ...next });
   saveSettings();
   applyLaunchAtLogin(settings.launchAtLogin);
 
