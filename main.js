@@ -42,6 +42,7 @@ const {
   quitAndInstallUpdate,
   applyAutoUpdaterPreferences,
 } = require("./lib/updater");
+const { createSessionTimer, formatClock } = require("./lib/timer");
 
 const SETTINGS_PATH = path.join(app.getPath("userData"), "settings.json");
 const RELEASES_URL = pkg.repository?.url
@@ -96,13 +97,8 @@ let settingsWindow = null;
 const breakWindows = new Map();
 
 let settings = { ...DEFAULT_SETTINGS };
-let workSecondsLeft = 0;
-let breakSecondsLeft = 0;
-let onBreak = false;
-let breakIsDemo = false;
-let breakExitRequested = false;
+const session = createSessionTimer();
 let breakExitTimer = null;
-let preBreakNotified = false;
 const BREAK_EXIT_ANIM_MS = 1100;
 const BREAK_EXIT_FAST_MS = 280;
 let tickTimer = null;
@@ -181,7 +177,7 @@ function loadSettings() {
   } catch {
     settings = normalizeSettings();
   }
-  workSecondsLeft = settings.workMinutes * 60;
+  session.resetWork(settings.workMinutes);
 }
 
 function saveSettings() {
@@ -194,40 +190,21 @@ function saveSettings() {
   }
 }
 
-function formatClock(totalSeconds) {
-  const m = Math.floor(totalSeconds / 60);
-  const s = totalSeconds % 60;
-  return `${m}:${String(s).padStart(2, "0")}`;
-}
-
 function updateTrayTitle() {
   if (!tray) return;
   const tr = getTranslator();
   updateTrayStatus(tray, {
-    onBreak,
-    clockText: formatClock(onBreak ? breakSecondsLeft : workSecondsLeft),
+    onBreak: session.onBreak,
+    clockText: formatClock(
+      session.onBreak ? session.breakSecondsLeft : session.workSecondsLeft,
+    ),
     tr,
   });
 }
 
 function postponeBreak(minutes) {
-  if (onBreak) return;
-  workSecondsLeft += minutes * 60;
-  preBreakNotified = false;
+  if (!session.postpone(minutes)) return;
   refreshTray();
-}
-
-function maybeNotifyBeforeBreak() {
-  if (!settings.notifyBeforeBreak || onBreak) return;
-  if (workSecondsLeft !== 60 || preBreakNotified) return;
-
-  const tr = getTranslator();
-  showNotification({
-    title: tr.t("notify.title"),
-    body: tr.t("notify.body"),
-    silent: false,
-  });
-  preBreakNotified = true;
 }
 
 function buildUpdateTrayItems(tr) {
@@ -588,10 +565,10 @@ async function openUpdatePromptWindow(payload) {
     icon: getAppIconPath(),
     autoHideMenuBar: true,
     webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
+      preload: path.join(__dirname, "preload-update.js"),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false,
+      sandbox: true,
     },
   });
 
@@ -880,16 +857,18 @@ function scheduleUpdateChecks() {
 
 function buildTrayMenu() {
   const tr = getTranslator();
-  const clock = formatClock(onBreak ? breakSecondsLeft : workSecondsLeft);
+  const clock = formatClock(
+    session.onBreak ? session.breakSecondsLeft : session.workSecondsLeft,
+  );
 
   const statusItem = {
-    label: onBreak
+    label: session.onBreak
       ? tr.t("tray.breakStatus", { clock })
       : tr.t("tray.workStatus", { clock }),
     enabled: false,
   };
 
-  if (onBreak) {
+  if (session.onBreak) {
     return Menu.buildFromTemplate([
       statusItem,
       { type: "separator" },
@@ -972,8 +951,7 @@ function refreshTray() {
 }
 
 function resetWorkTimer() {
-  workSecondsLeft = settings.workMinutes * 60;
-  preBreakNotified = false;
+  session.resetWork(settings.workMinutes);
   refreshTray();
 }
 
@@ -989,46 +967,51 @@ function startTick() {
   tickTimer = setInterval(tick, 1000);
 }
 
-function tick() {
-  const idleSec = powerMonitor.getSystemIdleTime();
-  const idleLimit = settings.idlePauseMinutes * 60;
-  const isIdle = idleSec >= idleLimit;
+function showPreBreakNotification() {
+  const tr = getTranslator();
+  showNotification({
+    title: tr.t("notify.title"),
+    body: tr.t("notify.body"),
+    silent: false,
+  });
+}
 
-  if (onBreak) {
-    if (breakSecondsLeft <= 0) {
+function tick() {
+  const result = session.tick({
+    idleSeconds: powerMonitor.getSystemIdleTime(),
+    idlePauseMinutes: settings.idlePauseMinutes,
+    notifyBeforeBreak: settings.notifyBeforeBreak,
+  });
+
+  if (result.notify) {
+    showPreBreakNotification();
+  }
+
+  switch (result.kind) {
+    case "breakWaitingExit":
       refreshTray();
       return;
+    case "breakTick":
+      broadcastBreakTick();
+      if (result.shouldExit) {
+        requestBreakExit();
+      }
+      refreshTray();
+      return;
+    case "idle":
+      refreshTray();
+      return;
+    case "startBreak":
+      startBreak({ demo: false });
+      return;
+    case "workTick":
+      refreshTray();
+      return;
+    default: {
+      const _exhaustive = result.kind;
+      throw new Error(`Unhandled tick kind: ${_exhaustive}`);
     }
-    breakSecondsLeft -= 1;
-    broadcastBreakTick();
-    if (breakSecondsLeft <= 0 && !breakExitRequested) {
-      requestBreakExit();
-    }
-    refreshTray();
-    return;
   }
-
-  if (isIdle) {
-    refreshTray();
-    return;
-  }
-
-  if (workSecondsLeft > 90) {
-    preBreakNotified = false;
-  }
-
-  maybeNotifyBeforeBreak();
-
-  if (workSecondsLeft <= 0) {
-    startBreak({ demo: false });
-    return;
-  }
-
-  workSecondsLeft -= 1;
-  if (workSecondsLeft <= 0) {
-    startBreak({ demo: false });
-  }
-  refreshTray();
 }
 
 function buildBreakPayload(extra = {}) {
@@ -1038,7 +1021,7 @@ function buildBreakPayload(extra = {}) {
     showExercises: settings.showExercises,
     strings: tr.messages.break,
     locale: tr.locale,
-    demo: breakIsDemo,
+    demo: session.breakIsDemo,
     ...extra,
   };
 }
@@ -1054,7 +1037,7 @@ async function createBreakWindows(payload) {
     configureBreakWindow(win);
 
     win.on("close", (e) => {
-      if (!onBreak) return;
+      if (!session.onBreak) return;
       e.preventDefault();
       requestBreakExit({ fast: true });
     });
@@ -1072,7 +1055,7 @@ async function createBreakWindows(payload) {
 }
 
 function broadcastBreakLocaleUpdate() {
-  if (!onBreak) return;
+  if (!session.onBreak) return;
   const payload = buildBreakPayload();
   for (const win of breakWindows.values()) {
     if (!win.isDestroyed()) {
@@ -1084,7 +1067,9 @@ function broadcastBreakLocaleUpdate() {
 function broadcastBreakTick() {
   for (const win of breakWindows.values()) {
     if (!win.isDestroyed()) {
-      win.webContents.send("break-tick", { secondsLeft: breakSecondsLeft });
+      win.webContents.send("break-tick", {
+        secondsLeft: session.breakSecondsLeft,
+      });
     }
   }
 }
@@ -1100,8 +1085,7 @@ function closeBreakWindows() {
 }
 
 function requestBreakExit({ fast = false } = {}) {
-  if (!onBreak || breakExitRequested) return;
-  breakExitRequested = true;
+  if (!session.markExitRequested()) return;
 
   const delayMs = fast ? BREAK_EXIT_FAST_MS : BREAK_EXIT_ANIM_MS;
   const playSound = settings.soundOnBreakEnd;
@@ -1115,24 +1099,23 @@ function requestBreakExit({ fast = false } = {}) {
   clearTimeout(breakExitTimer);
   breakExitTimer = setTimeout(() => {
     breakExitTimer = null;
-    if (onBreak) endBreak();
+    if (session.onBreak) endBreak();
   }, delayMs);
 }
 
 async function startBreak({ demo = false, seconds = null } = {}) {
-  if (onBreak) {
+  if (session.onBreak) {
     closeBreakWindows();
   }
 
-  onBreak = true;
-  breakIsDemo = demo;
-  breakExitRequested = false;
-  preBreakNotified = false;
-  breakSecondsLeft =
-    demo && seconds != null ? seconds : settings.breakMinutes * 60;
+  const totalSeconds = session.beginBreak({
+    demo,
+    seconds,
+    breakMinutes: settings.breakMinutes,
+  });
 
   const payload = {
-    totalSeconds: breakSecondsLeft,
+    totalSeconds,
     demo,
   };
 
@@ -1143,11 +1126,8 @@ async function startBreak({ demo = false, seconds = null } = {}) {
 function endBreak() {
   clearTimeout(breakExitTimer);
   breakExitTimer = null;
-  onBreak = false;
-  breakIsDemo = false;
-  breakExitRequested = false;
+  session.finishBreak(settings.workMinutes);
   closeBreakWindows();
-  resetWorkTimer();
   refreshTray();
 }
 
@@ -1169,10 +1149,10 @@ function openSettings() {
     icon: getAppIconPath(),
     autoHideMenuBar: true,
     webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
+      preload: path.join(__dirname, "preload-settings.js"),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false,
+      sandbox: true,
     },
   });
 
@@ -1262,8 +1242,8 @@ ipcMain.handle("get-settings", () => {
   const tr = getTranslator();
   return {
     settings,
-    workSecondsLeft,
-    onBreak,
+    workSecondsLeft: session.workSecondsLeft,
+    onBreak: session.onBreak,
     locale: tr.locale,
     strings: tr.messages,
     appVersion: pkg.version,
@@ -1327,7 +1307,7 @@ ipcMain.handle("save-settings", (_e, next) => {
     broadcastBreakLocaleUpdate();
   }
 
-  if (!onBreak) resetWorkTimer();
+  if (!session.onBreak) resetWorkTimer();
 
   syncAutoUpdaterPreferences();
 

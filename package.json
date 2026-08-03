@@ -47,7 +47,7 @@
     "artifactName": "Cat-Break-${version}-${arch}.${ext}",
     "files": [
       "main.js",
-      "preload.js",
+      "preload-*.js",
       "lib/**/*",
       "locales/**/*",
       "src/**/*",
