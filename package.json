@@ -5,6 +5,7 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
+    "test": "node scripts/selfcheck-lib.js",
     "prepare": "node scripts/prepare-icons.js",
     "pack": "npm run prepare && electron-builder --dir",
     "dist": "npm run dist:mac",
