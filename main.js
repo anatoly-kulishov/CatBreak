@@ -4,7 +4,6 @@ const {
   Tray,
   Menu,
   nativeImage,
-  screen,
   powerMonitor,
   ipcMain,
   shell,
@@ -14,14 +13,12 @@ const path = require("path");
 const fs = require("fs");
 const pkg = require("./package.json");
 const {
-  configureBreakWindow,
   updateTrayStatus,
   getTrayIconPath,
   getAppIconPath,
   getAppIconImage,
   hideDockIfNeeded,
   setAppUserModelId,
-  getBreakWindowOptions,
 } = require("./lib/platform");
 const { createTranslator, clearLocaleCache } = require("./lib/i18n");
 const { applyLaunchAtLogin, canUseLoginItemSettings } = require("./lib/autostart");
@@ -43,6 +40,7 @@ const {
   applyAutoUpdaterPreferences,
 } = require("./lib/updater");
 const { createSessionTimer, formatClock } = require("./lib/timer");
+const { createBreakWindowsController } = require("./lib/break-windows");
 
 const SETTINGS_PATH = path.join(app.getPath("userData"), "settings.json");
 const RELEASES_URL = pkg.repository?.url
@@ -94,13 +92,15 @@ function withAppDialogIcon(options) {
 
 let tray = null;
 let settingsWindow = null;
-const breakWindows = new Map();
 
 let settings = { ...DEFAULT_SETTINGS };
 const session = createSessionTimer();
-let breakExitTimer = null;
-const BREAK_EXIT_ANIM_MS = 1100;
-const BREAK_EXIT_FAST_MS = 280;
+const overlays = createBreakWindowsController({
+  projectRoot: __dirname,
+  isOnBreak: () => session.onBreak,
+  onFastClose: () => requestBreakExit({ fast: true }),
+  onExitAnimationDone: () => endBreak(),
+});
 let tickTimer = null;
 let isFirstRun = false;
 
@@ -944,9 +944,11 @@ function buildTrayMenu() {
   ]);
 }
 
-function refreshTray() {
+function refreshTray({ rebuildMenu = true } = {}) {
   if (!tray) return;
-  tray.setContextMenu(buildTrayMenu());
+  if (rebuildMenu) {
+    tray.setContextMenu(buildTrayMenu());
+  }
   updateTrayTitle();
 }
 
@@ -989,23 +991,23 @@ function tick() {
 
   switch (result.kind) {
     case "breakWaitingExit":
-      refreshTray();
+      refreshTray({ rebuildMenu: false });
       return;
     case "breakTick":
-      broadcastBreakTick();
+      overlays.broadcastTick(session.breakSecondsLeft);
       if (result.shouldExit) {
         requestBreakExit();
       }
-      refreshTray();
+      refreshTray({ rebuildMenu: false });
       return;
     case "idle":
-      refreshTray();
+      refreshTray({ rebuildMenu: false });
       return;
     case "startBreak":
       startBreak({ demo: false });
       return;
     case "workTick":
-      refreshTray();
+      refreshTray({ rebuildMenu: false });
       return;
     default: {
       const _exhaustive = result.kind;
@@ -1026,108 +1028,46 @@ function buildBreakPayload(extra = {}) {
   };
 }
 
-async function createBreakWindows(payload) {
-  const displays = screen.getAllDisplays();
-
-  for (const display of displays) {
-    const win = new BrowserWindow(
-      getBreakWindowOptions(display, settings.strictBreak),
-    );
-
-    configureBreakWindow(win);
-
-    win.on("close", (e) => {
-      if (!session.onBreak) return;
-      e.preventDefault();
-      requestBreakExit({ fast: true });
-    });
-
-    const breakPayload = {
-      ...payload,
-      ...buildBreakPayload(),
-    };
-
-    await win.loadFile(path.join(__dirname, "src", "break.html"));
-    win.webContents.send("break-init", breakPayload);
-
-    breakWindows.set(display.id, win);
-  }
-}
-
 function broadcastBreakLocaleUpdate() {
-  if (!session.onBreak) return;
-  const payload = buildBreakPayload();
-  for (const win of breakWindows.values()) {
-    if (!win.isDestroyed()) {
-      win.webContents.send("break-locale-update", payload);
-    }
-  }
-}
-
-function broadcastBreakTick() {
-  for (const win of breakWindows.values()) {
-    if (!win.isDestroyed()) {
-      win.webContents.send("break-tick", {
-        secondsLeft: session.breakSecondsLeft,
-      });
-    }
-  }
-}
-
-function closeBreakWindows() {
-  for (const win of breakWindows.values()) {
-    if (!win.isDestroyed()) {
-      win.removeAllListeners("close");
-      win.destroy();
-    }
-  }
-  breakWindows.clear();
+  overlays.broadcastLocale(buildBreakPayload());
 }
 
 function requestBreakExit({ fast = false } = {}) {
-  if (!session.markExitRequested()) return;
-
-  const delayMs = fast ? BREAK_EXIT_FAST_MS : BREAK_EXIT_ANIM_MS;
-  const playSound = settings.soundOnBreakEnd;
-
-  for (const win of breakWindows.values()) {
-    if (!win.isDestroyed()) {
-      win.webContents.send("break-exit-request", { fast, playSound });
-    }
-  }
-
-  clearTimeout(breakExitTimer);
-  breakExitTimer = setTimeout(() => {
-    breakExitTimer = null;
-    if (session.onBreak) endBreak();
-  }, delayMs);
+  overlays.requestExit({
+    fast,
+    playSound: settings.soundOnBreakEnd,
+    markExitRequested: () => session.markExitRequested(),
+  });
 }
 
 async function startBreak({ demo = false, seconds = null } = {}) {
-  if (session.onBreak) {
-    closeBreakWindows();
-  }
+  await overlays.withCreateLock(async () => {
+    if (session.onBreak) {
+      overlays.closeAll();
+    }
 
-  const totalSeconds = session.beginBreak({
-    demo,
-    seconds,
-    breakMinutes: settings.breakMinutes,
+    const totalSeconds = session.beginBreak({
+      demo,
+      seconds,
+      breakMinutes: settings.breakMinutes,
+    });
+
+    await overlays.createAll(
+      {
+        totalSeconds,
+        demo,
+        ...buildBreakPayload(),
+      },
+      settings.strictBreak,
+    );
+    refreshTray();
   });
-
-  const payload = {
-    totalSeconds,
-    demo,
-  };
-
-  await createBreakWindows(payload);
-  refreshTray();
 }
 
 function endBreak() {
-  clearTimeout(breakExitTimer);
-  breakExitTimer = null;
+  overlays.clearExitTimer();
   session.finishBreak(settings.workMinutes);
-  closeBreakWindows();
+  overlays.closeAll();
   refreshTray();
 }
 
@@ -1231,7 +1171,7 @@ app.on("window-all-closed", (e) => {
 
 app.on("before-quit", () => {
   stopTick();
-  closeBreakWindows();
+  overlays.closeAll();
   if (updateCheckTimer) {
     clearInterval(updateCheckTimer);
     updateCheckTimer = null;
