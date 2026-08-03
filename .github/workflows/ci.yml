@@ -19,14 +19,26 @@ jobs:
 
       - run: npm ci
       - run: npm run prepare
+      - run: npm test
       - run: node --check main.js
       - run: node --check lib/i18n.js
       - run: node --check lib/platform.js
       - run: node --check lib/autostart.js
+      - run: node --check lib/release-assets.js
       - run: node --check lib/releases.js
+      - run: node --check lib/timer.js
+      - run: node --check lib/break-windows.js
+      - run: node --check lib/update-ui.js
       - run: node --check lib/updater.js
+      - run: node --check lib/notifications.js
       - run: node --check src/settings.js
+      - run: node --check src/break.js
       - run: node --check src/update-dialog.js
-      - run: node --check preload.js
+      - run: node --check preload-settings.js
+      - run: node --check preload-break.js
+      - run: node --check preload-update.js
       - run: node --check landing/download.js
+      - run: node --check landing/release-assets.js
       - run: node --check scripts/release-notes-from-changelog.js
+      - run: node --check scripts/selfcheck-lib.js
+      - run: node --check scripts/sync-release-assets.js

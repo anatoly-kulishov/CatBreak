@@ -74,14 +74,21 @@ On **Windows/Linux**, the countdown is shown in the tray **tooltip**. On **macOS
 ```
 CatBreak/
 ├── main.js
+├── preload-settings.js
+├── preload-break.js
+├── preload-update.js
 ├── lib/
-│   ├── platform.js   # OS-specific window & tray behavior
-│   └── i18n.js       # locales
-├── locales/          # en.json, ru.json
-├── preload.js
+│   ├── timer.js
+│   ├── break-windows.js
+│   ├── update-ui.js
+│   ├── release-assets.js   # shared with landing
+│   ├── releases.js
+│   └── platform.js
+├── locales/
 ├── src/
 ├── assets/
-├── build/            # icon.icns, icon.ico, icon.png
+├── build/
+├── landing/                # GitHub Pages
 ├── docs/
 └── scripts/
 ```

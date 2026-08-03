@@ -75,15 +75,11 @@ function applyPlatformUI() {
   if (faq) faq.hidden = false;
 }
 
-function isSkippedFilename(name) {
-  return /blockmap|\.ya?ml$/i.test(name);
+const RA = window.CatBreakReleaseAssets;
+if (!RA) {
+  throw new Error("CatBreakReleaseAssets missing — load release-assets.js first");
 }
-
-/** @returns {GHAsset[]} */
-function filterAssets(raw) {
-  if (!Array.isArray(raw)) return [];
-  return raw.filter((a) => a?.name && a?.browser_download_url && !isSkippedFilename(a.name));
-}
+const { filterAssets, groupPlatformAssets } = RA;
 
 /** @param {string} name */
 function labelMac(name) {
@@ -156,128 +152,6 @@ function labelLinux(name) {
     return { en: "deb", ru: "deb" };
   }
   return { en: name, ru: name };
-}
-
-/**
- * @param {GHAsset[]} assets
- */
-function categorize(assets) {
-  const mac = assets.filter((a) => {
-    const n = a.name;
-    if (/\.dmg$/i.test(n)) return true;
-    if (!/\.zip$/i.test(n)) return false;
-    const low = n.toLowerCase();
-    if (/mac|darwin/.test(low)) return true;
-    if (/win|linux|nsis|appimage|\.deb/.test(low)) return false;
-    return /arm64|aarch64|x64|x86_64|intel|universal/.test(low);
-  });
-  const win = assets.filter((a) => /\.exe$/i.test(a.name));
-  const linux = assets.filter((a) => /\.(AppImage|deb)$/i.test(a.name));
-  return { mac, win, linux };
-}
-
-/** @param {GHAsset[]} list */
-function sortMac(list) {
-  const score = (name) => {
-    const n = name.toLowerCase();
-    let base = 3;
-    if (n.includes("universal")) base = 0;
-    else if (n.includes("arm64") || n.includes("aarch64")) base = 1;
-    else if (n.includes("x64") || n.includes("x86_64") || n.includes("intel")) base = 2;
-    const fmtOrder = /\.dmg$/i.test(name) ? 0 : /\.zip$/i.test(name) ? 1 : 2;
-    return base * 10 + fmtOrder;
-  };
-  return [...list].sort((a, b) => score(a.name) - score(b.name) || a.name.localeCompare(b.name));
-}
-
-/** @param {GHAsset[]} list */
-function sortWin(list) {
-  const score = (name) => {
-    const n = name.toLowerCase();
-    if (n.includes("portable")) return 2;
-    if (n.includes("arm64") || n.includes("aarch64")) return 1;
-    return 0;
-  };
-  return [...list].sort((a, b) => score(a.name) - score(b.name) || a.name.localeCompare(b.name));
-}
-
-/** @param {GHAsset[]} list */
-function sortLinux(list) {
-  const score = (name) => {
-    const n = name.toLowerCase();
-    const deb = /\.deb$/i.test(name);
-    const ai = /\.appimage$/i.test(name);
-    const arm = n.includes("arm64") || n.includes("aarch64");
-    let s = deb ? 0 : ai ? 2 : 10;
-    s += arm ? 1 : 0;
-    return s;
-  };
-  return [...list].sort((a, b) => score(a.name) - score(b.name) || a.name.localeCompare(b.name));
-}
-
-/** Prefer canonical Cat-Break-* names over Cat.Break.* duplicates from parallel CI uploads. */
-function assetNameScore(name) {
-  let score = 0;
-  if (/^Cat-Break-/i.test(name)) score += 20;
-  if (/^cat-break-desktop_/i.test(name)) score += 18;
-  if (/Cat\.Break/i.test(name)) score -= 10;
-  return score;
-}
-
-/** @param {GHAsset} a @param {GHAsset} b */
-function preferAsset(a, b) {
-  const diff = assetNameScore(a.name) - assetNameScore(b.name);
-  if (diff !== 0) return diff > 0 ? a : b;
-  return a.name.length <= b.name.length ? a : b;
-}
-
-/**
- * @param {GHAsset[]} list
- * @param {(name: string) => string} keyFn
- */
-function dedupeAssets(list, keyFn) {
-  const map = new Map();
-  for (const asset of list) {
-    const key = keyFn(asset.name);
-    const prev = map.get(key);
-    map.set(key, prev ? preferAsset(asset, prev) : asset);
-  }
-  return [...map.values()];
-}
-
-/** @param {string} name */
-function macAssetKey(name) {
-  const n = name.toLowerCase();
-  const fmt = /\.dmg$/i.test(name) ? "dmg" : /\.zip$/i.test(name) ? "zip" : "other";
-  if (fmt === "other") return `other:${name}`;
-  let arch = "generic";
-  if (n.includes("universal")) arch = "universal";
-  else if (n.includes("arm64") || n.includes("aarch64")) arch = "arm64";
-  else if (n.includes("x64") || n.includes("x86_64") || n.includes("intel")) arch = "x64";
-  return `${arch}:${fmt}`;
-}
-
-/** @param {string} name */
-function winAssetKey(name) {
-  const n = name.toLowerCase();
-  if (n.includes("portable")) return "portable:x64";
-  if (n.includes("setup")) {
-    return n.includes("arm64") || n.includes("aarch64") ? "setup:arm64" : "setup:nsis";
-  }
-  if (n.includes("arm64") || n.includes("aarch64")) return "nsis:arm64";
-  if (n.includes("x64") || n.includes("x86_64") || n.includes("intel")) return "nsis:x64";
-  if (/^Cat-Break-\d+\.\d+\.\d+\.exe$/i.test(name)) return "nsis:universal";
-  return `other:${name}`;
-}
-
-/** @param {string} name */
-function linuxAssetKey(name) {
-  const n = name.toLowerCase();
-  const fmt = /\.appimage$/i.test(name) ? "appimage" : /\.deb$/i.test(name) ? "deb" : "other";
-  if (fmt === "other") return `other:${name}`;
-  let arch = "x64";
-  if (n.includes("arm64") || n.includes("aarch64")) arch = "arm64";
-  return `${arch}:${fmt}`;
 }
 
 function currentLang() {
@@ -442,7 +316,7 @@ function closeAllPlatformMenus() {
 
 function renderPlatformMenus() {
   const assets = lastReleasePayload?.assets ?? [];
-  const bins = categorize(assets);
+  const bins = groupPlatformAssets(assets);
 
   /** @type {Record<string, HTMLUListElement | null>} */
   const menus = {
@@ -451,11 +325,9 @@ function renderPlatformMenus() {
     linux: document.querySelector('.platform-picker[data-platform="linux"] .platform-picker__menu'),
   };
 
-  if (menus.mac) fillMenu(menus.mac, sortMac(dedupeAssets(bins.mac, macAssetKey)), labelMac);
-  if (menus.win) fillMenu(menus.win, sortWin(dedupeAssets(bins.win, winAssetKey)), labelWin);
-  if (menus.linux) {
-    fillMenu(menus.linux, sortLinux(dedupeAssets(bins.linux, linuxAssetKey)), labelLinux);
-  }
+  if (menus.mac) fillMenu(menus.mac, bins.mac, labelMac);
+  if (menus.win) fillMenu(menus.win, bins.win, labelWin);
+  if (menus.linux) fillMenu(menus.linux, bins.linux, labelLinux);
 
   const empty = bins.mac.length + bins.win.length + bins.linux.length === 0;
   const note = document.getElementById("download-note");

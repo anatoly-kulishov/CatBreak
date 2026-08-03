@@ -167,7 +167,19 @@ function writeIcns() {
 }
 
 async function main() {
-  if (!fs.existsSync(sourcePath)) {
+  const hasSource = fs.existsSync(sourcePath);
+  const hasCommittedOutputs =
+    fs.existsSync(appIconAsset) &&
+    fs.existsSync(pngPath) &&
+    fs.existsSync(icnsPath);
+
+  if (!hasSource) {
+    if (hasCommittedOutputs) {
+      console.warn(
+        "Skip icon build: missing build/icon-source.png (using committed icons).",
+      );
+      return;
+    }
     console.error("Missing build/icon-source.png");
     process.exit(1);
   }
