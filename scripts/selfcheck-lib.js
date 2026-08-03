@@ -10,7 +10,7 @@ const {
   categorize,
   sortWin,
   matchesArch,
-} = require("../lib/releases");
+} = require("../lib/release-assets");
 const { createSessionTimer, formatClock } = require("../lib/timer");
 
 function asset(name) {
@@ -126,5 +126,72 @@ assert.strictEqual(session.workSecondsLeft, 55 * 60);
 // postpone blocked during break
 session.beginBreak({ demo: true, seconds: 10, breakMinutes: 5 });
 assert.strictEqual(session.postpone(5), false);
+
+// --- release-assets sync (landing copy) ---
+const fs = require("fs");
+const path = require("path");
+const root = path.join(__dirname, "..");
+const sharedSrc = fs.readFileSync(path.join(root, "lib", "release-assets.js"), "utf8");
+const sharedLanding = fs.readFileSync(
+  path.join(root, "landing", "release-assets.js"),
+  "utf8",
+);
+assert.strictEqual(
+  sharedSrc,
+  sharedLanding,
+  "landing/release-assets.js must match lib/release-assets.js (run npm run sync:assets)",
+);
+
+const { groupPlatformAssets } = require("../lib/release-assets");
+const grouped = groupPlatformAssets([
+  asset(`Cat-Break-${V}-arm64.dmg`),
+  asset(`Cat-Break-${V}-x64-Setup.exe`),
+  asset(`Cat-Break-${V}-x64.AppImage`),
+  asset("latest-mac.yml"),
+]);
+assert.strictEqual(grouped.mac.length, 1);
+assert.strictEqual(grouped.win.length, 1);
+assert.strictEqual(grouped.linux.length, 1);
+
+// --- update-ui i18n keys not mangled; keys exist in locales ---
+const updateUiSrc = fs.readFileSync(path.join(root, "lib", "update-ui.js"), "utf8");
+assert.ok(
+  !/"getSettings\(\)\./.test(updateUiSrc),
+  "update-ui.js must not contain mangled i18n keys like \"getSettings().…\"",
+);
+
+const en = JSON.parse(fs.readFileSync(path.join(root, "locales", "en.json"), "utf8"));
+const ru = JSON.parse(fs.readFileSync(path.join(root, "locales", "ru.json"), "utf8"));
+
+function lookup(messages, key) {
+  return key.split(".").reduce((acc, part) => acc?.[part], messages);
+}
+
+const keyRe = /\.t\(\s*["']([a-zA-Z0-9_.]+)["']/g;
+const keys = new Set();
+let m;
+while ((m = keyRe.exec(updateUiSrc))) keys.add(m[1]);
+assert.ok(keys.size > 10, "expected i18n keys in update-ui.js");
+for (const key of keys) {
+  assert.strictEqual(
+    typeof lookup(en, key),
+    "string",
+    `missing EN key: ${key}`,
+  );
+  assert.strictEqual(
+    typeof lookup(ru, key),
+    "string",
+    `missing RU key: ${key}`,
+  );
+}
+
+// preload files exist and break preload does not expose saveSettings
+const breakPreload = fs.readFileSync(
+  path.join(root, "preload-break.js"),
+  "utf8",
+);
+assert.ok(!breakPreload.includes("saveSettings"));
+assert.ok(!breakPreload.includes("installUpdate"));
+assert.ok(breakPreload.includes("skipBreak"));
 
 console.log("selfcheck-lib: ok");

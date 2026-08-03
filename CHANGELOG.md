@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.0.7] - 2026-08-03
+
+### Changed
+
+- Refactor main process: extract `lib/timer.js`, `lib/break-windows.js`, `lib/update-ui.js`; split preloads by window; sandbox Settings and update dialog
+- Shared GitHub asset helpers in `lib/release-assets.js` (used by app updater and landing download menus)
+- Settings copy clarifies unsigned macOS update/install limits
+- CI: `npm test` selfcheck for timer and release-asset helpers
+
+### Fixed
+
+- Main-process update dialog fallback used `window.setTimeout` (ReferenceError); settings save now clamps/validates values and preserves update dismiss/last-check fields
+- Break overlays recreate when displays are added or removed during a break
+- Update dialogs showed raw `getSettings().…` keys after update-ui extract (i18n path mangled)
+
 ## [1.0.6] - 2026-05-21
 
 ### Added

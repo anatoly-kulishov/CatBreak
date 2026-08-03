@@ -4,8 +4,8 @@
 
 **Репозиторий:** https://github.com/anatoly-kulishov/CatBreak  
 **Ветки:** `main` (stable), `develop` (работа). PR: `develop` → `main`.  
-**Версия на develop:** **1.0.6** (см. `package.json`).  
-**Последний релевантный коммит:** `dbdd719` — fix prepare-icons skip.
+**Версия на develop:** **1.0.7** (см. `package.json`).  
+**Архитектура:** см. актуальный [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md) (`lib/timer`, `break-windows`, `update-ui`, `preload-*`).
 
 ---
 
@@ -17,7 +17,7 @@ Repo: https://github.com/anatoly-kulishov/CatBreak
 Ветки: main (stable), develop (работа). PR: develop → main.
 
 Прочитай docs/PROJECT_CONTEXT.md, docs/CHAT_HANDOFF.md, docs/DESIGN_SYSTEM.md, CHANGELOG.md.
-Entry: main.js, preload.js, src/settings.*, src/break.*, lib/platform.js, landing/download.js.
+Entry: main.js, preload-*.js, lib/timer.js, lib/break-windows.js, lib/update-ui.js, src/settings.*, src/break.*, landing/download.js.
 Не подписывать билды codesign --deep. Windows: signAndEditExecutable: false.
 ```
 
@@ -45,23 +45,19 @@ Entry: main.js, preload.js, src/settings.*, src/break.*, lib/platform.js, landin
 ## 2. Архитектура
 
 ```
-main.js              # tray, tick 1s, IPC, break/settings windows, updates
-preload.js           # window.catBreak (contextBridge)
-lib/platform.js      # tray, break window flags, icons
-lib/autostart.js     # launch at login (macOS/Windows)
-lib/i18n.js          # locales, {{param}}
-lib/notifications.js
-lib/releases.js      # GitHub Releases API
-lib/displays.js      # выбор мониторов (если есть в ветке)
-lib/hotkeys.js       # глобальные hotkeys (если есть в ветке)
-lib/schedule.js      # рабочие часы, пауза до завтра
-lib/stats.js         # статистика дня
-src/settings.html/js/css
-src/break.html/js/css
+main.js                 # wiring: tray, IPC, lifecycle
+preload-settings.js / preload-break.js / preload-update.js
+lib/timer.js            # work/break FSM
+lib/break-windows.js    # overlays + display hotplug
+lib/update-ui.js        # update orchestration
+lib/release-assets.js   # shared asset helpers (→ landing/)
+lib/releases.js         # GitHub API
+lib/platform.js / i18n.js / autostart.js / notifications.js / updater.js
+src/settings.* / break.* / update-dialog.*
 locales/en.json, ru.json
-assets/              # neko1/2.webm, meow.mp3, trayIcon*.png, app-icon-1024.png
-build/               # icon-source.png + icon.icns/ico/png (НЕ удалять!)
-landing/             # GitHub Pages
+assets/                 # neko1/2.webm, meow.mp3, trayIcon*.png
+build/                  # icon-source.png + icon.icns/ico/png (НЕ удалять!)
+landing/                # GitHub Pages
 ```
 
 ### Жизненный цикл таймера
@@ -78,7 +74,7 @@ landing/             # GitHub Pages
 
 ### IPC / preload
 
-Renderer: `window.catBreak` (`preload.js`), `contextIsolation: true`.
+Renderer: `window.catBreak` (`preload-*.js`), `contextIsolation: true`, `sandbox: true`.
 
 Ключевые каналы: `get-settings`, `save-settings`, `skip-break`, `start-demo-break`, `break-init`, `break-tick`, `settings-updated`.
 

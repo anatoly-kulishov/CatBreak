@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "landing/**"
+      - "lib/release-assets.js"
       - ".github/workflows/landing-pages.yml"
   workflow_dispatch:
 
@@ -25,6 +26,9 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Sync shared release-assets into landing
+        run: node scripts/sync-release-assets.js
 
       - uses: actions/configure-pages@v4
 

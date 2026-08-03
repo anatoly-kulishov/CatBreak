@@ -1,12 +1,14 @@
 {
   "name": "cat-break-desktop",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Eye break reminders with fullscreen overlay and cat mascot (macOS, Windows, Linux)",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
     "test": "node scripts/selfcheck-lib.js",
-    "prepare": "node scripts/prepare-icons.js",
+    "smoke": "electron scripts/smoke-electron.js",
+    "sync:assets": "node scripts/sync-release-assets.js",
+    "prepare": "node scripts/sync-release-assets.js && node scripts/prepare-icons.js",
     "pack": "npm run prepare && electron-builder --dir",
     "dist": "npm run dist:mac",
     "dist:mac": "npm run prepare && electron-builder --mac && cp docs/en/MACOS_INSTALL.md dist/",

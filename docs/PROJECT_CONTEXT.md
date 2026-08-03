@@ -14,7 +14,7 @@
 
 **Репозиторий:** https://github.com/anatoly-kulishov/CatBreak  
 **Ветки:** `main` (stable), `develop` (работа). PR: `develop` → `main`.  
-**Версия:** см. `package.json` (сейчас **1.0.6**).
+**Версия:** см. `package.json` (сейчас **1.0.7**).
 
 ---
 
@@ -36,37 +36,42 @@
 
 ```mermaid
 flowchart TB
-  subgraph main [main.js]
-    Tray[Tray + Menu]
-    Tick[tick 1s]
-    SettingsWin[Settings BrowserWindow]
-    BreakWins[Break BrowserWindow x N displays]
+  subgraph mainProc [main.js]
+    Tray[Tray_Menu]
+    Tick[tick_1s]
+    SettingsWin[Settings_Window]
+    BreakWins[Break_Windows]
   end
 
-  subgraph lib
-    Platform[lib/platform.js]
-    I18n[lib/i18n.js]
-    Auto[lib/autostart.js]
-    Notify[lib/notifications.js]
+  subgraph libLayer [lib]
+    Platform[platform.js]
+    Timer[timer.js]
+    BreakOv[break-windows.js]
+    UpdateUi[update-ui.js]
+    Releases[releases.js]
+  end
+
+  subgraph preloadLayer [preload]
+    PreSettings[preload-settings.js]
+    PreBreak[preload-break.js]
+    PreUpdate[preload-update.js]
   end
 
   subgraph renderer
-    SettingsUI[src/settings.html + settings.js]
-    BreakUI[src/break.html + break.js]
+    SettingsUI[src/settings]
+    BreakUI[src/break]
   end
-
-  Preload[preload.js contextBridge]
 
   Tray --> Tick
   Tick --> BreakWins
-  SettingsWin --> Preload
-  BreakWins --> Preload
-  Preload --> SettingsUI
-  Preload --> BreakUI
-  main --> lib
+  SettingsWin --> PreSettings
+  BreakWins --> PreBreak
+  PreSettings --> SettingsUI
+  PreBreak --> BreakUI
+  mainProc --> libLayer
 ```
 
-**Процесс один** (`requestSingleInstanceLock`). Нет главного окна — только tray; второй запуск открывает Settings.
+**Процесс один** (`requestSingleInstanceLock`). Нет главного окна — только tray; второй запуск открывает Settings. Preload **разный** по типу окна (`sandbox: true` везде).
 
 **Настройки на диске:** `{userData}/settings.json` (см. `SETTINGS_PATH` в `main.js`).
 
@@ -76,17 +81,17 @@ flowchart TB
 
 | Состояние | Поведение |
 |-----------|-----------|
-| **Work** | `workSecondsLeft` уменьшается каждую секунду |
+| **Work** | `session.workSecondsLeft` уменьшается каждую секунду (`lib/timer.js`) |
 | **Idle** | Если `powerMonitor.getSystemIdleTime()` ≥ `idlePauseMinutes` — таймер **не тикает** |
 | **Pre-break** | За 60 с до конца work — optional notification (`notifyBeforeBreak`) |
-| **Break** | `onBreak=true`, окна на каждом `display`, `breakSecondsLeft` тикает |
+| **Break** | `session.onBreak`, окна на каждом `display` (`lib/break-windows.js`), countdown тикает |
 | **End break** | Анимация выхода кота → `endBreak()` → снова work timer с полным `workMinutes` |
 
-**Важные функции в `main.js`:**
+**Важные точки:**
 
-- `tick()` — сердце логики; **не** выставлять `breakExitRequested` до `requestBreakExit()` (баг 1.0.0)
-- `startBreak({ demo, seconds })` — demo = 30 с из tray или Settings
-- `requestBreakExit({ fast })` — IPC + анимация; `playSound` если включено `soundOnBreakEnd` (и при досрочном выходе)
+- `session.tick()` / `overlays.*` — не ставить `breakExitRequested` вручную, только через `requestBreakExit()` → `session.markExitRequested()` (баг 1.0.0)
+- `startBreak({ demo, seconds })` — demo = 30 с; concurrent start игнорируется (`withCreateLock`)
+- Display hotplug: `overlays.bindDisplayHotplug()` пересоздаёт окна при add/remove монитора
 - `postponeBreak(5|10)` — только когда **не** onBreak
 - Первый запуск без `settings.json` автоматически открывает Settings.
 
@@ -95,19 +100,26 @@ flowchart TB
 ## 4. Карта файлов
 
 ```
-main.js              # tray, timers, IPC, break/settings windows
-preload.js           # window.catBreak API для renderer
+main.js              # wiring: tray, IPC, lifecycle
+preload-settings.js  # Settings window API
+preload-break.js     # break overlay API
+preload-update.js    # compact update dialog API
 package.json         # scripts, electron-builder targets
 
 lib/
-  platform.js        # OS: tray title, break window flags, tray icon path
-  i18n.js            # locales, createTranslator, {{param}} substitution
-  autostart.js       # launch at login (macOS/Windows only)
-  notifications.js   # Electron Notification
+  platform.js        # OS: tray title, break window flags, icons
+  timer.js           # work/break session FSM (no Electron)
+  break-windows.js   # multi-display overlays + display hotplug
+  update-ui.js       # update check/download/dialogs
+  release-assets.js  # shared asset categorize/sort (Node + browser UMD)
+  releases.js        # GitHub API + pick asset for runtime
+  updater.js         # electron-updater glue
+  i18n.js / autostart.js / notifications.js
 
 src/
   settings.html/js/css   # окно настроек
   break.html/js/css      # fullscreen break overlay
+  update-dialog.*        # compact macOS update prompt
 
 locales/en.json, ru.json
 assets/
@@ -120,16 +132,18 @@ build/
   icon-source.png      # исходник иллюстрации (1024, без alpha)
   icon.png/.icns/.ico  # generated (npm run prepare)
 
-scripts/
-  prepare-icons.js   # squircle app icons + landing/app-icon.png
-  update-meow.sh       # обновить meow из preview.mp3
-
 landing/               # GitHub Pages (не Electron)
-  index.html, styles.css, download.js, app-icon.png
+  index.html, styles.css, download.js, release-assets.js, app-icon.png
+
+scripts/
+  prepare-icons.js         # squircle app icons + landing/app-icon.png
+  sync-release-assets.js   # lib/release-assets.js → landing/
+  selfcheck-lib.js         # npm test
+  update-meow.sh
 
 docs/                  # install guides, DESIGN_SYSTEM, этот файл
 .github/workflows/
-  ci.yml               # syntax check
+  ci.yml               # syntax check + npm test
   landing-pages.yml    # deploy landing/ on push to main
 ```
 
@@ -168,7 +182,7 @@ docs/                  # install guides, DESIGN_SYSTEM, этот файл
 | `break-locale-update` | main → break | новые strings при смене языка в Settings |
 | `settings-updated` | main → settings | push после save |
 
-Renderer: **`window.catBreak`** (`preload.js`), `contextIsolation: true`.
+Renderer: **`window.catBreak`** (`preload-settings.js` / `preload-break.js` / `preload-update.js`), `contextIsolation: true`, `sandbox: true`.
 
 Break overlay CSP: `default-src 'self'; media-src 'self'; … script-src 'self'`.
 
@@ -225,7 +239,7 @@ npm run dist:linux
 
 Локально `npm run dist:*` — только для проверки; на GitHub заливать вручную не нужно.
 
-CI (`ci.yml`): `npm ci`, `prepare`, `node --check` на main.js, lib/*, preload, landing/download.js.
+CI (`ci.yml`): `npm ci`, `prepare` (sync release-assets + icons), `npm test`, `node --check` на main/lib/preload/landing/scripts.
 
 ---
 
@@ -255,8 +269,10 @@ CI (`ci.yml`): `npm ci`, `prepare`, `node --check` на main.js, lib/*, preload,
 
 | Задача | Файлы |
 |--------|--------|
-| Логика таймера / tray | `main.js` |
-| Поведение OS / multi-monitor | `lib/platform.js` |
+| Логика таймера | `lib/timer.js`, wiring в `main.js` |
+| Break overlays / multi-monitor | `lib/break-windows.js`, `lib/platform.js` |
+| Updates UI | `lib/update-ui.js`, `lib/updater.js`, `lib/releases.js` |
+| Asset menus (app + landing) | `lib/release-assets.js` (+ sync в `landing/`) |
 | Новая настройка | `main.js` DEFAULT + IPC, `settings.*`, `locales/*` |
 | Текст break overlay | `locales/*`, `src/break.js` |
 | Звук конца перерыва | `assets/meow.mp3`, `src/break.js`, `scripts/update-meow.sh` |
@@ -284,7 +300,7 @@ CI (`ci.yml`): `npm ci`, `prepare`, `node --check` на main.js, lib/*, preload,
 Проект: Cat Break — Electron tray timer + fullscreen cat break overlay.
 Repo: anatoly-kulishov/CatBreak, ветка develop/main.
 Прочитай docs/PROJECT_CONTEXT.md, docs/DESIGN_SYSTEM.md.
-Entry: main.js, preload.js, src/break.js, src/settings.js, landing/download.js.
+Entry: main.js, preload-*.js, lib/timer.js, lib/break-windows.js, lib/update-ui.js, src/break.js, src/settings.js, landing/download.js.
 Не подписывать билды codesign --deep. Windows: signAndEditExecutable: false.
 ```
 
