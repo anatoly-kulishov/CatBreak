@@ -56,21 +56,6 @@
 
     <section class="settings-section" aria-labelledby="sec-general">
       <h2 id="sec-general" class="settings-section__title" data-i18n="settings.sectionGeneral"></h2>
-      <label class="row">
-        <input id="checkForUpdates" type="checkbox" />
-        <span data-i18n="settings.checkForUpdates"></span>
-      </label>
-      <label id="autoDownloadUpdatesRow" class="row row--nested">
-        <input id="autoDownloadUpdates" type="checkbox" />
-        <span data-i18n="settings.autoDownloadUpdates"></span>
-      </label>
-      <label id="autoInstallOnQuitRow" class="row row--nested">
-        <input id="autoInstallOnQuit" type="checkbox" />
-        <span>
-          <span data-i18n="settings.autoInstallOnQuit"></span>
-          <small class="note" data-i18n="settings.autoInstallOnQuitNote"></small>
-        </span>
-      </label>
       <label class="field">
         <span class="field__label" data-i18n="settings.language"></span>
         <select id="locale">
@@ -129,31 +114,47 @@
         <span data-i18n="settings.strictBreak"></span>
       </label>
       <p class="field-hint field-hint--tight" data-i18n="settings.strictBreakHint"></p>
-      <label id="launchAtLoginRow" class="row row--spaced" hidden>
-        <input id="launchAtLogin" type="checkbox" />
-        <span>
-          <span data-i18n="settings.launchAtLogin"></span>
-          <small class="note" data-i18n="settings.launchAtLoginNote"></small>
-        </span>
-      </label>
     </section>
 
-    <div class="actions">
-      <button id="save" type="button" data-i18n="settings.save"></button>
-      <button id="demoBreak" class="button-secondary" type="button" data-i18n="settings.demoBreak"></button>
-    </div>
+    <details class="settings-advanced">
+      <summary data-i18n="settings.sectionAdvanced"></summary>
+      <div class="settings-advanced__body">
+        <label id="launchAtLoginRow" class="row row--spaced" hidden>
+          <input id="launchAtLogin" type="checkbox" />
+          <span>
+            <span data-i18n="settings.launchAtLogin"></span>
+            <small class="note" data-i18n="settings.launchAtLoginNote"></small>
+          </span>
+        </label>
+        <label class="row">
+          <input id="checkForUpdates" type="checkbox" />
+          <span data-i18n="settings.checkForUpdates"></span>
+        </label>
+        <label id="autoDownloadUpdatesRow" class="row row--nested">
+          <input id="autoDownloadUpdates" type="checkbox" />
+          <span data-i18n="settings.autoDownloadUpdates"></span>
+        </label>
+        <label id="autoInstallOnQuitRow" class="row row--nested">
+          <input id="autoInstallOnQuit" type="checkbox" />
+          <span>
+            <span data-i18n="settings.autoInstallOnQuit"></span>
+            <small class="note" data-i18n="settings.autoInstallOnQuitNote"></small>
+          </span>
+        </label>
+        <button id="demoBreak" class="button-secondary settings-advanced__demo" type="button" data-i18n="settings.demoBreak"></button>
+        <footer class="meta">
+          <div class="meta__version-row">
+            <span id="app-version"></span>
+            ·
+            <a id="releases-link" href="#" target="_blank" rel="noopener noreferrer"></a>
+          </div>
+          <p id="update-status-line" class="update-status" role="status"></p>
+          <button type="button" id="check-updates-now" class="button-secondary meta__check-updates"></button>
+        </footer>
+      </div>
+    </details>
 
     <p id="status" class="status" role="status"></p>
-
-    <footer class="meta">
-      <div class="meta__version-row">
-        <span id="app-version"></span>
-        ·
-        <a id="releases-link" href="#" target="_blank" rel="noopener noreferrer"></a>
-      </div>
-      <p id="update-status-line" class="update-status" role="status"></p>
-      <button type="button" id="check-updates-now" class="button-secondary meta__check-updates"></button>
-    </footer>
 
     <script src="settings.js"></script>
   </body>

@@ -29,6 +29,10 @@ body {
   color: var(--text);
 }
 
+[hidden] {
+  display: none !important;
+}
+
 .bg {
   position: fixed;
   inset: 0;
@@ -283,6 +287,14 @@ body.is-fading-out {
   margin-bottom: 0.95rem;
   padding-bottom: 0.95rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.side-card__head--compact {
+  align-items: center;
+}
+
+.side-card__head--compact .eyebrow {
+  margin-bottom: 0;
 }
 
 .side-card__mascot {

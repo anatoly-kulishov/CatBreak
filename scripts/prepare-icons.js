@@ -143,6 +143,18 @@ async function buildLandingIcon(sharp, inputPath) {
     .toBuffer();
 }
 
+/** Tray PNG: cat left-aligned, transparent gap on the right before menu bar title. */
+async function writeTrayIcon(sharp, appMaster, outPath, size, gapPx) {
+  const inner = size - gapPx;
+  const cat = await sharp(appMaster).resize(inner, inner, { fit: "cover" }).png().toBuffer();
+  await sharp({
+    create: { width: size, height: size, channels: 4, background: TRANSPARENT },
+  })
+    .composite([{ input: cat, left: 0, top: Math.round((size - inner) / 2) }])
+    .png()
+    .toFile(outPath);
+}
+
 async function writeIconset(sharp, masterBuffer) {
   if (!fs.existsSync(iconsetDir)) {
     fs.mkdirSync(iconsetDir, { recursive: true });
@@ -202,6 +214,12 @@ async function main() {
 
   await sharp(landingMaster).resize(256, 256).png().toFile(landingIconAsset);
   console.log("Wrote", landingIconAsset);
+
+  const tray22 = path.join(root, "assets", "trayIcon.png");
+  const tray44 = path.join(root, "assets", "trayIcon@2x.png");
+  await writeTrayIcon(sharp, appMaster, tray22, 22, 3);
+  await writeTrayIcon(sharp, appMaster, tray44, 44, 6);
+  console.log("Wrote", tray22, tray44);
 
   const pngToIco = require("png-to-ico");
   const icoSizes = [16, 24, 32, 48, 64, 128, 256];
