@@ -30,6 +30,7 @@
   "settings": {
     "sub": "Eye breaks with a tray cat. Screen recording is not used.",
     "sectionGeneral": "General",
+    "sectionAdvanced": "Advanced",
     "sectionTiming": "Timing",
     "sectionBehavior": "Break behavior",
     "quickStartHint": "Pick a common rhythm or run a 30-second demo.",
@@ -105,7 +106,9 @@
     "updateStatusAvailable": "Update {{version}} is available.",
     "updateStatusDownloading": "Downloading {{version}}…",
     "updateStatusReady": "Update {{version}} is ready to install.",
-    "updateStatusError": "Update check failed. Try again.",
+    "updateStatusError": "Could not check for updates.",
+    "updateErrorMissingYml": "Update metadata is missing on GitHub for your system.",
+    "updateErrorNetwork": "Could not reach GitHub. Check your internet connection.",
     "updateChannelAuto": "via in-app updater",
     "updateChannelManual": "via GitHub Releases",
     "updateChannelOff": "update checks off",
@@ -116,16 +119,16 @@
   },
   "break": {
     "title": "Break",
-    "eyebrow": "Your cat break — give your eyes a rest",
-    "hintDemo": "Demo. Closes all screens at once.",
-    "hintSkip": "Ends the break on all screens.",
-    "hintDemoStrict": "Demo break",
-    "hintStrict": "Step away from the screen.",
+    "eyebrow": "Time to rest your eyes",
+    "hintDemo": "Trial break, 30 seconds. You can leave anytime.",
+    "hintSkip": "",
+    "hintDemoStrict": "Trial break, 30 seconds",
+    "hintStrict": "Step away from the monitor.",
     "exercisesTitle": "Exercises",
     "exercise1": "Look into the distance for 20 seconds.",
     "exercise2": "Blink slowly 10 times.",
     "exercise3": "Roll your eyes in circles.",
     "exercise4": "Stand up and stretch your neck.",
-    "skip": "Let the cat nap — skip"
+    "skip": "Let the cat nap. Skip"
   }
 }

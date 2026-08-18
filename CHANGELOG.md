@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.0.8] - 2026-08-18
+
+### Changed
+
+- Settings: autosave, highlighted rhythm preset, updates and demo under Advanced
+- macOS tray: cat icon plus timer only; sharper @2x squircle with a small gap
+- Break overlay copy; skip button hides in strict mode
+
+### Fixed
+
+- Update check shows a short error instead of a stack trace, and falls back to GitHub Releases when `latest-*.yml` is missing
+- Autostart and Dock hide are skipped in unpackaged macOS, so login-item errors do not appear in `npm start`
+
 ## [1.0.7] - 2026-08-03
 
 ### Changed

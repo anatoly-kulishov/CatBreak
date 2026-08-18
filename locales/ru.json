@@ -30,6 +30,7 @@
   "settings": {
     "sub": "Перерывы для глаз и котик в трее. Запись экрана не используется.",
     "sectionGeneral": "Общие",
+    "sectionAdvanced": "Дополнительно",
     "sectionTiming": "Расписание",
     "sectionBehavior": "Поведение перерыва",
     "quickStartHint": "Выберите готовый ритм или запустите демо на 30 секунд.",
@@ -105,7 +106,9 @@
     "updateStatusAvailable": "Доступно обновление {{version}}.",
     "updateStatusDownloading": "Скачиваем {{version}}…",
     "updateStatusReady": "Обновление {{version}} готово к установке.",
-    "updateStatusError": "Ошибка проверки. Попробуйте ещё раз.",
+    "updateStatusError": "Не удалось проверить обновления.",
+    "updateErrorMissingYml": "На GitHub нет файла обновления для вашей системы.",
+    "updateErrorNetwork": "Нет связи с GitHub. Проверьте интернет.",
     "updateChannelAuto": "через встроенный updater",
     "updateChannelManual": "через GitHub Releases",
     "updateChannelOff": "проверка обновлений выкл.",
@@ -116,16 +119,16 @@
   },
   "break": {
     "title": "Перерыв",
-    "eyebrow": "Котик зовёт — дайте глазам отдых",
-    "hintDemo": "Демо. Закроет все экраны сразу.",
-    "hintSkip": "Закроет перерыв на всех экранах.",
-    "hintDemoStrict": "Демо-перерыв",
+    "eyebrow": "Пора дать глазам отдых",
+    "hintDemo": "Пробный перерыв, 30 секунд. Выйти можно в любой момент.",
+    "hintSkip": "",
+    "hintDemoStrict": "Пробный перерыв, 30 секунд",
     "hintStrict": "Отойдите от монитора.",
     "exercisesTitle": "Упражнения",
     "exercise1": "20 секунд смотрите вдаль, не в экран.",
     "exercise2": "Медленно моргните 10 раз.",
     "exercise3": "Круговые движения глазами.",
     "exercise4": "Встаньте, разомните шею.",
-    "skip": "Пусть кот отдыхает — выход"
+    "skip": "Пусть кот отдыхает. Выход"
   }
 }

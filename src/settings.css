@@ -174,6 +174,53 @@ label.row--nested {
   filter: none;
 }
 
+.preset-button--active {
+  background: rgba(110, 231, 255, 0.22);
+  border-color: rgba(110, 231, 255, 0.55);
+  box-shadow: 0 0 0 1px rgba(110, 231, 255, 0.15);
+}
+
+.settings-advanced {
+  margin-top: 1.35rem;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 2px);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.settings-advanced summary {
+  padding: 0.85rem 1rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  cursor: pointer;
+  list-style: none;
+}
+
+.settings-advanced summary::-webkit-details-marker {
+  display: none;
+}
+
+.settings-advanced[open] summary {
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-advanced__body {
+  padding: 1rem 1rem 1.05rem;
+}
+
+.settings-advanced__body .meta {
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border);
+}
+
+.settings-advanced__demo {
+  width: 100%;
+  margin-top: 0.75rem;
+}
+
 .actions {
   display: flex;
   flex-direction: column;

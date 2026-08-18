@@ -2,6 +2,7 @@ const countdownEl = document.getElementById("countdown");
 const countdownClockEl = document.getElementById("countdown-clock");
 const eyebrowEl = document.getElementById("eyebrow");
 const hintEl = document.getElementById("hint");
+const headEl = document.querySelector(".side-card__head");
 const exercisesEl = document.getElementById("exercises");
 const exercisesTitleEl = document.getElementById("exercises-title");
 const skipBtn = document.getElementById("skip");
@@ -60,15 +61,21 @@ function applyBreakStrings(s) {
 function applyHints() {
   if (!breakState.strictBreak) {
     skipBtn.hidden = false;
-    hintEl.textContent = breakState.demo
+    const hint = breakState.demo
       ? strings.hintDemo || ""
       : strings.hintSkip || "";
+    hintEl.textContent = hint;
+    hintEl.hidden = !hint;
   } else {
     skipBtn.hidden = true;
-    hintEl.textContent = breakState.demo
+    const hint = breakState.demo
       ? strings.hintDemoStrict || ""
       : strings.hintStrict || "";
+    hintEl.textContent = hint;
+    hintEl.hidden = !hint;
   }
+
+  headEl?.classList.toggle("side-card__head--compact", hintEl.hidden);
 }
 
 function applyBreakUi(payload) {

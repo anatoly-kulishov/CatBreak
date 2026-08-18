@@ -15,7 +15,7 @@ const fs = require("fs");
 const pkg = require("./package.json");
 const {
   updateTrayStatus,
-  getTrayIconPath,
+  createTrayImage,
   getAppIconPath,
   getAppIconImage,
   hideDockIfNeeded,
@@ -483,16 +483,7 @@ function notifySettingsUi() {
 }
 
 function createTray() {
-  const iconPath = getTrayIconPath();
-  let icon;
-  if (fs.existsSync(iconPath)) {
-    icon = nativeImage.createFromPath(iconPath);
-    const size = process.platform === "win32" ? 16 : 22;
-    icon = icon.resize({ width: size, height: size });
-  } else {
-    icon = nativeImage.createEmpty();
-  }
-
+  const icon = createTrayImage();
   tray = new Tray(icon);
 
   if (process.platform === "darwin") {

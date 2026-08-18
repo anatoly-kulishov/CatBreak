@@ -103,6 +103,60 @@ function fillForm(settings) {
       el.value = settings[key];
     }
   }
+  syncPresetHighlight();
+}
+
+let autosaveTimer = null;
+let autosaveGeneration = 0;
+
+async function autosaveSettings() {
+  const gen = ++autosaveGeneration;
+  try {
+    await window.catBreak.saveSettings(readForm());
+    if (gen !== autosaveGeneration) return;
+  } catch (err) {
+    console.error(err);
+    showBootError(t("settings.saveError"));
+  }
+}
+
+function scheduleAutosave() {
+  window.clearTimeout(autosaveTimer);
+  autosaveTimer = window.setTimeout(() => {
+    autosaveSettings();
+  }, 400);
+}
+
+function syncPresetHighlight() {
+  const work = Number.parseInt(document.getElementById("workMinutes")?.value, 10);
+  const breakM = Number.parseInt(document.getElementById("breakMinutes")?.value, 10);
+  document.querySelectorAll("[data-preset-work][data-preset-break]").forEach((btn) => {
+    const match =
+      Number(btn.dataset.presetWork) === work &&
+      Number(btn.dataset.presetBreak) === breakM;
+    btn.classList.toggle("preset-button--active", match);
+    btn.setAttribute("aria-pressed", match ? "true" : "false");
+  });
+}
+
+function bindAutosave() {
+  for (const key of fields) {
+    const el = document.getElementById(key);
+    if (!el) continue;
+    el.addEventListener("change", () => {
+      if (key === "checkForUpdates") {
+        applyUpdateOptionsVisibility();
+      }
+      syncPresetHighlight();
+      scheduleAutosave();
+    });
+    if (el.type === "number") {
+      el.addEventListener("input", () => {
+        syncPresetHighlight();
+        scheduleAutosave();
+      });
+    }
+  }
 }
 
 function getUpdateHintKey(update) {
@@ -173,13 +227,11 @@ function applyUpdateStatusLine(state) {
     case "up_to_date":
       line.textContent = t("settings.updateStatusUpToDate", {
         version: state.currentVersion,
-        when: formatLastChecked(state.lastCheckedAt) || "—",
+        when: formatLastChecked(state.lastCheckedAt) || "-",
       });
       break;
     case "error":
-      line.textContent = state.error
-        ? `${t("settings.updateStatusError")} ${state.error}`
-        : t("settings.updateStatusError");
+      line.textContent = state.error || t("settings.updateStatusError");
       break;
     default:
       line.textContent = t("settings.updateStatusIdle");
@@ -360,28 +412,12 @@ document.querySelectorAll("[data-preset-work][data-preset-break]").forEach((btn)
     const breakMinutes = document.getElementById("breakMinutes");
     if (workMinutes) workMinutes.value = btn.dataset.presetWork;
     if (breakMinutes) breakMinutes.value = btn.dataset.presetBreak;
+    syncPresetHighlight();
+    scheduleAutosave();
   });
 });
 
-document.getElementById("checkForUpdates")?.addEventListener("change", applyUpdateOptionsVisibility);
-
-document.getElementById("save")?.addEventListener("click", async () => {
-  try {
-    await window.catBreak.saveSettings(readForm());
-    const savedMsg = savedStatusMessage();
-    setStatus(savedMsg, "success");
-    const status = document.getElementById("status");
-    window.setTimeout(() => {
-      if (status?.textContent === savedMsg) {
-        status.textContent = "";
-        status.classList.remove("status--error");
-      }
-    }, 2200);
-  } catch (err) {
-    console.error(err);
-    showBootError(t("settings.saveError"));
-  }
-});
+bindAutosave();
 
 document.getElementById("demoBreak")?.addEventListener("click", async () => {
   try {
