@@ -13,7 +13,7 @@
 **DMG**
 
 1. Get `Cat Break-*-arm64.dmg` (or `*-x64.dmg` for Intel) from [Releases](https://github.com/anatoly-kulishov/CatBreak/releases), or build from source.
-2. Open the DMG and drag **Cat Break** to **Applications**.
+2. Open the DMG and drag **Cat Break** to **Applications**. The disk image also has **Как открыть.txt** with first-launch steps.
 
 **ZIP**
 

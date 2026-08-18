@@ -1,0 +1,31 @@
+Cat Break
+=========
+
+Русский
+-------
+1. Перетащите Cat Break в папку «Программы».
+2. Откройте «Программы».
+3. Нажмите на Cat Break правой кнопкой мыши и выберите «Открыть».
+4. В диалоге снова нажмите «Открыть».
+
+Если macOS пишет, что приложение «повреждено», откройте Терминал и вставьте:
+
+xattr -cr "/Applications/Cat Break.app"
+open "/Applications/Cat Break.app"
+
+Команду выполняйте после переноса в «Программы».
+После первого успешного запуска приложение само снимает эту метку. Дальше можно открывать как обычно.
+
+English
+-------
+1. Drag Cat Break to Applications.
+2. Open Applications.
+3. Right-click Cat Break and choose Open.
+4. Click Open in the dialog.
+
+If macOS says the app is damaged, run this in Terminal after moving it to Applications:
+
+xattr -cr "/Applications/Cat Break.app"
+open "/Applications/Cat Break.app"
+
+After the first successful launch, the app clears this flag itself.

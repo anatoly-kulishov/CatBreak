@@ -41,4 +41,5 @@ jobs:
       - run: node --check landing/release-assets.js
       - run: node --check scripts/release-notes-from-changelog.js
       - run: node --check scripts/selfcheck-lib.js
+      - run: node --check scripts/version.js
       - run: node --check scripts/sync-release-assets.js

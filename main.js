@@ -19,6 +19,7 @@ const {
   getAppIconPath,
   getAppIconImage,
   hideDockIfNeeded,
+  stripAppQuarantine,
   setAppUserModelId,
 } = require("./lib/platform");
 const { createTranslator, clearLocaleCache } = require("./lib/i18n");
@@ -507,6 +508,7 @@ app.whenReady().then(() => {
   createTray();
   startTick();
   hideDockIfNeeded();
+  stripAppQuarantine();
   overlays.bindDisplayHotplug();
   if (isFirstRun) {
     openSettings();
