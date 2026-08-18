@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.9] - 2026-08-18
+
+### Added
+
+- macOS: after the first successful Open, the app clears its own quarantine flag
+- DMG includes `Как открыть.txt` with first-launch steps
+
+### Changed
+
+- Releases must be `MAJOR.MINOR.PATCH` only, one step after the latest tag (`npm run bump:patch`)
+
 ## [1.0.8] - 2026-08-18
 
 ### Changed

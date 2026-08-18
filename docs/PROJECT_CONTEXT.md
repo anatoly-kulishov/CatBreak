@@ -14,7 +14,7 @@
 
 **Репозиторий:** https://github.com/anatoly-kulishov/CatBreak  
 **Ветки:** `main` (stable), `develop` (работа). PR: `develop` → `main`.  
-**Версия:** см. `package.json` (сейчас **1.0.8**).
+**Версия:** см. `package.json` (сейчас **1.0.9**). Semver только `MAJOR.MINOR.PATCH` (1.0.9, не 1.0.81 и не 1.0.8.1).
 
 ---
 
@@ -224,18 +224,28 @@ npm run dist:linux
 
 Артефакты: `dist/`. Релизы — **GitHub Releases** (лендинг тянет `/releases/latest` API).
 
-**Публикация релиза (без ручной загрузки файлов):**
+**Публикация релиза (один флоу):**
 
-1. Версия в `package.json` и секция в `CHANGELOG.md` совпадают.
-2. Код в `main`, затем один из вариантов:
-   - **Тег:** `git tag v1.0.6 && git push origin v1.0.6` → workflow `release.yml` (notes из CHANGELOG + сборка mac/win/linux + upload).
-   - **Кнопка:** GitHub → Actions → Release → Run workflow → version `1.0.6` (как в `package.json`, не `1.0.0`), ref `main` → создаёт тег и запускает pipeline.
-   - **Пересборка:** если тег уже есть — Run workflow с `rebuild_only=true` и той же version.
-3. Дождаться зелёных job **release-notes** и три **build**. Артефакты и `latest-*.yml` появятся на Releases автоматически.
+Версия живёт в `package.json`. Тот же номер должен быть в `package-lock.json` и в секции `CHANGELOG.md`. Тег только `vMAJOR.MINOR.PATCH`, следующий после последнего тега: после `v1.0.8` это `v1.0.9`, `v1.1.0` или `v2.0.0`. Не `1.0.81` и не `1.0.8.1`.
 
-При **Request timed out** на Windows: **не** жмите Re-run failed jobs на старом run (workflow застрял на коммите тега). Варианты:
-- **Release Windows assets → Run workflow** (только Windows, всегда с `main`, tag `v1.0.6`)
-- **Release → Run workflow** → version `1.0.6`, **rebuild_only** включён, ref `main`
+```bash
+npm run bump:patch     # или bump:minor / bump:major
+# дописать CHANGELOG, закоммитить, PR в main, смержить
+git checkout main && git pull
+npm run version:check
+git tag "v$(node -p "require('./package.json').version")"
+git push origin "v$(node -p "require('./package.json').version")"
+```
+
+Пуш тега запускает `release.yml` (notes + mac/win/linux + `latest-*.yml`). Лендинг сам читает `/releases/latest`, руками ссылки не править.
+
+**Пересборка** того же тега: Actions → Release → Run workflow → `rebuild_only=true`, version как в теге.
+
+Не создавать новый релиз через `workflow_dispatch` без `rebuild_only`: тег от `GITHUB_TOKEN` не запускает сборку. Только `git push origin vX.Y.Z`.
+
+При **Request timed out** на Windows: **не** жмите Re-run failed jobs на старом run. Варианты:
+- **Release Windows assets → Run workflow**
+- **Release → Run workflow** → та же version, **rebuild_only** включён, ref `main`
 
 Локально `npm run dist:*` — только для проверки; на GitHub заливать вручную не нужно.
 

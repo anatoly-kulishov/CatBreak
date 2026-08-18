@@ -43,16 +43,12 @@ jobs:
           ref: ${{ inputs.ref }}
           fetch-depth: 0
 
-      - name: Verify package.json version
+      - name: Verify version
         run: |
-          PKG_VERSION=$(node -p "require('./package.json').version")
           INPUT_VERSION="${{ inputs.version }}"
           INPUT_VERSION="${INPUT_VERSION#v}"
-          if [ "$PKG_VERSION" != "$INPUT_VERSION" ]; then
-            echo "::error::package.json is $PKG_VERSION but you entered $INPUT_VERSION. Use version $PKG_VERSION."
-            exit 1
-          fi
-          echo "TAG=v$PKG_VERSION" >> "$GITHUB_ENV"
+          node scripts/version.js check --release --tag="v$INPUT_VERSION"
+          echo "TAG=v$INPUT_VERSION" >> "$GITHUB_ENV"
 
       - name: Create and push tag
         run: |
@@ -79,6 +75,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ env.RELEASE_TAG }}
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Verify version matches tag
+        run: node scripts/version.js check --tag="$RELEASE_TAG"
+        env:
+          RELEASE_TAG: ${{ env.RELEASE_TAG }}
 
       - name: Write release notes from CHANGELOG
         run: node scripts/release-notes-from-changelog.js "$RELEASE_TAG" > release-notes.md
@@ -135,7 +138,7 @@ jobs:
           This job is using an old checkout (missing upload-windows-release.ps1).
           Do NOT use Re-run failed jobs on an old Release run.
           Use either:
-            - Actions > Release > Run workflow (rebuild_only=true, version=1.0.6), or
+            - Actions > Release > Run workflow (rebuild_only=true, version as in the tag), or
             - Actions > Release Windows assets > Run workflow
           "@
           }
