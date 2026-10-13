@@ -1,6 +1,6 @@
 # Cat Break
 
-### **Eye breaks for your desktop — with a cat.**
+### **Eye breaks for your desktop - with a cat.**
 
 [![Release](https://img.shields.io/github/v/release/anatoly-kulishov/CatBreak?display_name=tag)](https://github.com/anatoly-kulishov/CatBreak/releases)
 [![Platform](https://img.shields.io/badge/platform-macOS%20·%20Windows%20·%20Linux-111111.svg)](#-platform-support)
@@ -101,7 +101,7 @@ Artifacts land in `dist/`.
 | `dist:win` | Windows (or macOS + Wine) | `Setup.exe`, portable `.exe` |
 | `dist:linux` | Linux | `.AppImage`, `.deb` |
 
-> **macOS:** do not run `codesign --deep` on the `.app` — it breaks Electron Framework signatures and the app will crash on launch.
+> **macOS:** do not run `codesign --deep` on the `.app` - it breaks Electron Framework signatures and the app will crash on launch.
 
 ### GitHub Releases
 
@@ -117,10 +117,10 @@ Unsigned builds: users may need **Right-click → Open** (macOS) or SmartScreen 
 
 ## Usage
 
-1. Launch — a tray icon appears.
+1. Launch - a tray icon appears.
 2. Wait for a break, or **Start break now** / **Demo (30 sec)**.
 3. When the timer ends, overlays close automatically.
-4. **Settings** — intervals, idle pause, exercises, strict mode, language.
+4. **Settings** - intervals, idle pause, exercises, strict mode, language.
 
 On **Windows/Linux**, countdown is in the tray **tooltip**. On **macOS**, it also shows next to the menu bar icon.
 
@@ -163,4 +163,4 @@ Prefer X11 for reliable always-on-top overlays.
 
 ---
 
-**If Cat Break helps your eyes — ⭐ the [repo](https://github.com/anatoly-kulishov/CatBreak).**
+**If Cat Break helps your eyes - ⭐ the [repo](https://github.com/anatoly-kulishov/CatBreak).**
